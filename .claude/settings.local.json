@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "PowerShell(if \\(-not \\(Test-Path \"C:\\\\Users\\\\Usuario\\\\.claude\\\\skills\"\\)\\) { New-Item -ItemType Directory -Path \"C:\\\\Users\\\\Usuario\\\\.claude\\\\skills\" -Force }; ls \"C:\\\\Users\\\\Usuario\\\\.claude\\\\skills\")",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

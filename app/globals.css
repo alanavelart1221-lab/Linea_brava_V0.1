@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --content-pad: clamp(1.25rem, 5vw, 2.5rem);
+}
+
+@layer base {
+  * {
+    @apply border-ink-700;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-950 text-bone font-sans antialiased;
+    font-feature-settings: "ss01", "cv01";
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    @apply bg-trail-500 text-ink-950;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tightest;
+    line-height: 0.92;
+  }
+
+  /* Visible focus rings for keyboard users (accessibility: CRITICAL) */
+  :focus-visible {
+    @apply outline-none ring-2 ring-trail-400 ring-offset-2 ring-offset-ink-950 rounded-sm;
+  }
+
+  /* Minimal, on-brand scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-600 rounded-full;
+    border: 2px solid theme("colors.ink.900");
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-trail-600;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-content;
+    padding-inline: var(--content-pad);
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-trail-400;
+  }
+
+  /* Fluid display headlines */
+  .h-hero {
+    font-size: clamp(3.25rem, 11vw, 9.5rem);
+  }
+  .h-section {
+    font-size: clamp(2.25rem, 6vw, 4.75rem);
+  }
+  .h2 {
+    font-size: clamp(1.875rem, 7vw, 3.25rem);
+  }
+
+  /* Topographic contour texture — pure SVG, no network cost */
+  .topo {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23F59E0B' stroke-width='1' stroke-opacity='0.06'%3E%3Cpath d='M0 400 Q 200 320 400 400 T 800 400'/%3E%3Cpath d='M0 440 Q 200 360 400 440 T 800 440'/%3E%3Cpath d='M0 480 Q 200 400 400 480 T 800 480'/%3E%3Cpath d='M0 520 Q 200 440 400 520 T 800 520'/%3E%3Cpath d='M0 560 Q 200 480 400 560 T 800 560'/%3E%3Cpath d='M0 360 Q 200 280 400 360 T 800 360'/%3E%3Cpath d='M0 320 Q 200 240 400 320 T 800 320'/%3E%3Cpath d='M0 280 Q 200 200 400 280 T 800 280'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 800px 800px;
+  }
+
+  /* Subtle film grain overlay for depth */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  }
+
+  .card-line {
+    @apply rounded-xl2 border border-ink-700 bg-ink-900/70 backdrop-blur-sm;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-ink-700 bg-ink-900 px-4 py-3 text-sm text-bone placeholder:text-mute/50 transition-colors focus:border-trail-500 focus:outline-none;
+  }
+
+  /* Amber sweep on primary CTA */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-trail-500 px-7 py-3.5 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-trail-400 cursor-pointer;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-600 px-7 py-3.5 text-sm font-semibold text-bone transition-colors duration-200 hover:border-trail-400 hover:text-trail-300 cursor-pointer;
+  }
+
+  .link-underline {
+    @apply relative inline-block;
+  }
+  .link-underline::after {
+    content: "";
+    @apply absolute -bottom-0.5 left-0 h-px w-0 bg-trail-400 transition-all duration-300 ease-out-expo;
+  }
+  .link-underline:hover::after {
+    @apply w-full;
+  }
+}
+
+/* Accessibility: honor reduced-motion globally (UX rule — HIGH severity) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
