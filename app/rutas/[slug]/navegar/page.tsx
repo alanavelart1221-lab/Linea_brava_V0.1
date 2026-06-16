@@ -35,6 +35,7 @@ export default function NavegarPage({
   const { slug } = use(params);
   const trail = getTrail(slug);
   if (!trail) notFound();
+  const track = trail.track;
 
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -55,16 +56,16 @@ export default function NavegarPage({
         setGpsError(null);
 
         // Find closest point on track and calculate remaining distance
-        if (trail.track.length > 1) {
+        if (track.length > 1) {
           let closest = 0;
           let minD = Infinity;
-          trail.track.forEach((pt, i) => {
+          track.forEach((pt, i) => {
             const d = haversineKm(p, pt);
             if (d < minD) { minD = d; closest = i; }
           });
           let remaining = 0;
-          for (let i = closest; i < trail.track.length - 1; i++) {
-            remaining += haversineKm(trail.track[i], trail.track[i + 1]);
+          for (let i = closest; i < track.length - 1; i++) {
+            remaining += haversineKm(track[i], track[i + 1]);
           }
           setDistanceLeft(remaining);
         }

@@ -11,8 +11,8 @@ export function Community() {
           <span className="text-trail-500">se cuidan entre sí.</span>
         </h2>
         <p className="mt-5 text-mute">
-          Aquí la gente graba y comparte rutas reales, organiza sus propias salidas y
-          encuentra exploradores con el mismo nivel. Sin filtros, sin agencias — puro terreno.
+          Rutas grabadas por quienes las recorrieron, conocimiento real en el foro y una red
+          de proveedores que te tienen cubierto. Sin filtros, sin agencias — puro terreno.
         </p>
       </Reveal>
 

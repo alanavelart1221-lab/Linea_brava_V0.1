@@ -18,10 +18,10 @@ export default async function TipsPage() {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("rol")
       .eq("id", user.id)
       .single();
-    isAdmin = profile?.is_admin ?? false;
+    isAdmin = profile?.rol === "admin";
   }
 
   return (

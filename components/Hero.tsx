@@ -87,9 +87,9 @@ export function Hero() {
             variants={word}
             className="mt-6 max-w-xl text-base leading-relaxed text-mute sm:text-lg"
           >
-            Explora rutas calificadas por todo México: desde brechas para empezar hasta
-            cañones que ponen a prueba a los expertos. Encuentra tu nivel, arma tu equipo y
-            lánzate.
+            Rutas con tracks GPX, eventos de la comunidad, directorio de talleres y
+            refacciones, foro y tips de manejo. Todo lo que el off-road mexicano necesita,
+            en un solo lugar.
           </motion.p>
 
           <motion.div
@@ -100,9 +100,6 @@ export function Hero() {
               Explorar rutas
               <Arrow />
             </Link>
-            <a href="#events" className="btn-ghost">
-              Ver salidas en grupo
-            </a>
           </motion.div>
 
           <motion.dl

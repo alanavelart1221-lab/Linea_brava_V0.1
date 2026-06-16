@@ -49,9 +49,9 @@ export interface Voice {
 export const NEXT_RUN_ISO = "2026-09-16T07:00:00";
 
 export const stats: Stat[] = [
-  { value: 4200, suffix: "+", label: "Miembros en ruta" },
-  { value: 318, suffix: "", label: "Rutas recorridas este año" },
-  { value: 27, suffix: "", label: "Estados explorados" },
+  { value: 4200, suffix: "+", label: "Miembros activos" },
+  { value: 318, suffix: "", label: "Rutas en el directorio" },
+  { value: 27, suffix: "", label: "Estados con rutas" },
   { value: 96, suffix: "%", label: "Volverían a la ruta" },
 ];
 
@@ -362,24 +362,24 @@ export const events: EventItem[] = [
 export const voices: Voice[] = [
   {
     quote:
-      "Llegué solo con una camioneta de agencia y me fui con doce números nuevos en el celular y cero miedo a la siguiente ruta.",
+      "Encontré un taller en el directorio que conocía mi Patrol de memoria. En tres días tenía el diferencial listo y el precio fue justo. No lo hubiera encontrado por mi cuenta.",
     name: "Mariana Quintero",
     role: "Miembro desde 2023",
-    rig: "4Runner TRD",
+    rig: "Nissan Patrol Y61",
   },
   {
     quote:
-      "Grabé mi primera ruta en la Sierra Gorda con la app, la subí y a la semana alguien más ya la había recorrido. Así de fácil funciona esto.",
+      "Pregunté en el foro si mi 4Runner de agencia aguantaba la ruta a Real de Catorce. En una hora ya tenía cinco respuestas con tips de presión de llanta y todo. Eso no lo da ningún grupo de WhatsApp.",
     name: "Diego Salas",
     role: "Miembro desde 2022",
-    rig: "Jeep JLU Rubicon",
+    rig: "Toyota 4Runner TRD",
   },
   {
     quote:
-      "Reservé la travesía nocturna en la Laguna Salada por impulso. Ver la Vía Láctea reflejada en el lecho seco fue la mejor noche del año.",
+      "Grabé mi primera ruta en la Sierra Gorda, la subí a la plataforma y a la semana alguien más ya la había recorrido con el track que compartí. Así de fácil funciona esto.",
     name: "Renata Ávila",
     role: "Miembro desde 2024",
-    rig: "Land Cruiser 80",
+    rig: "Jeep JLU Rubicon",
   },
 ];
 

@@ -1,24 +1,11 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth";
 import { AdminActions } from "./AdminActions";
 
 export default async function AdminRutasPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect("/");
-
-  // Check admin flag
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.is_admin) redirect("/");
+  const { supabase } = await requireAdmin();
 
   const { data: pending } = await supabase
     .from("user_routes")

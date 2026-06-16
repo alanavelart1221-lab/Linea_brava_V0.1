@@ -2,6 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { Marquee } from "@/components/Marquee";
 import { Stats } from "@/components/Stats";
+import { ExploreHub } from "@/components/ExploreHub";
 import { FeaturedTrails } from "@/components/FeaturedTrails";
 import { Community } from "@/components/Community";
 import { FeaturedTip } from "@/components/FeaturedTip";
@@ -18,6 +19,7 @@ export default function Home() {
         <Hero />
         <Marquee />
         <Stats />
+        <ExploreHub />
         <FeaturedTrails />
         <FeaturedTip />
         <Community />

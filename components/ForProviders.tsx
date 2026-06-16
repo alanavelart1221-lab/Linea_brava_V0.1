@@ -72,9 +72,9 @@ export function ForProviders() {
               variants={fadeUp}
               className="h2 text-bone"
             >
-              ¿Tienes un taller,{" "}
-              <span className="text-trail-500">distribuidora</span> o eres
-              guía?
+              ¿Tienes un taller o{" "}
+              <span className="text-trail-500">distribuidora</span> de
+              refacciones?
             </motion.h2>
 
             <motion.p

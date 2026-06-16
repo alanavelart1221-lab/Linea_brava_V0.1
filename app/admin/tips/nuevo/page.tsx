@@ -1,21 +1,10 @@
-import { redirect } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth";
 import { NuevoTipForm } from "../NuevoTipForm";
 
 export default async function NuevoTipPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.is_admin) redirect("/");
+  await requireAdmin();
 
   return (
     <>

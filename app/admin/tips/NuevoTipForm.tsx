@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { publicarTip } from "./actions";
 
 const CATEGORIES = ["Mecánica", "Equipo", "Navegación", "Seguridad", "General"];
 
@@ -41,16 +36,16 @@ export function NuevoTipForm() {
     }
 
     setSaving(true);
-    const { error: dbError } = await supabase.from("tips").insert({
-      title: form.title.trim(),
+    const { error: dbError } = await publicarTip({
+      title: form.title,
       category: form.category,
-      body: form.body.trim(),
-      image_url: mediaType === "image" && form.image_url ? form.image_url.trim() : null,
-      video_url: mediaType === "video" && form.video_url ? form.video_url.trim() : null,
+      body: form.body,
+      image_url: mediaType === "image" && form.image_url ? form.image_url : null,
+      video_url: mediaType === "video" && form.video_url ? form.video_url : null,
     });
     setSaving(false);
 
-    if (dbError) { setError(dbError.message); return; }
+    if (dbError) { setError(dbError); return; }
     setPhase("saved");
   }
 

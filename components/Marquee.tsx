@@ -1,11 +1,11 @@
 const items = [
-  "Comparte el camino",
-  "Rutas calificadas",
-  "Aptas para camionetas de agencia",
-  "Crea eventos en tu zona",
-  "Expediciones overland",
+  "Rutas con tracks GPX",
+  "Directorio de talleres off-road",
+  "Salidas en grupo para todo nivel",
+  "Foro de la comunidad",
+  "Tips de manejo y equipo",
   "Descubre rutas nuevas",
-  "Campamentos bajo cielos oscuros",
+  "Refacciones y proveedores cerca de ti",
 ];
 
 export function Marquee() {
