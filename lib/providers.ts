@@ -13,6 +13,18 @@ export interface Provider {
   featured: boolean;
 }
 
+// Producto / accesorio de la tienda de un proveedor (tabla `provider_products`).
+export interface ProviderProduct {
+  id: string;
+  provider_id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  currency: string;
+  image_url: string | null;
+  created_at: string;
+}
+
 export const TYPE_META: Record<ProviderType, { label: string; className: string }> = {
   taller:      { label: "Taller 4×4",             className: "border-blue-500/40 bg-blue-500/10 text-blue-400" },
   distribuidor:{ label: "Distribuidora",           className: "border-purple-500/40 bg-purple-500/10 text-purple-400" },

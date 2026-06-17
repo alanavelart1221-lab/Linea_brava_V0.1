@@ -6,7 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { ReplyForm } from "./ReplyForm";
 import { LikeButton } from "./LikeButton";
 import { SignInToReply } from "./SignInToReply";
+import { ThreadModeration } from "./ThreadModeration";
+import { DeleteReplyButton } from "./DeleteReplyButton";
 import { createReply, toggleThreadLike, toggleReplyLike } from "@/app/foro/actions";
+import { isAdmin } from "@/lib/auth";
 
 export const revalidate = 0;
 
@@ -39,6 +42,7 @@ export default async function ThreadPage({
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
+  const admin = await isAdmin();
 
   const [{ data: thread }, { data: rawReplies }] = await Promise.all([
     supabase
@@ -116,6 +120,11 @@ export default async function ThreadPage({
               <span className="rounded-full border border-ink-600 bg-ink-900 px-2.5 py-0.5 text-xs font-semibold text-mute">
                 {thread.category}
               </span>
+              {thread.closed && (
+                <span className="rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-0.5 text-xs font-semibold text-red-400">
+                  Cerrado
+                </span>
+              )}
             </div>
             <h1 className="font-display text-2xl text-bone sm:text-3xl">{thread.title}</h1>
             <div className="mt-2 flex items-center gap-2 text-xs text-mute">
@@ -146,6 +155,11 @@ export default async function ThreadPage({
                 </p>
               )}
             </div>
+            {admin && (
+              <div className="mt-4 border-t border-ink-700 pt-4">
+                <ThreadModeration threadId={id} closed={!!thread.closed} />
+              </div>
+            )}
           </article>
 
           {/* Replies */}
@@ -175,12 +189,13 @@ export default async function ThreadPage({
                           className="mt-3 max-h-72 w-full rounded-xl object-cover"
                         />
                       )}
-                      <div className="mt-4 border-t border-ink-700 pt-3">
+                      <div className="mt-4 flex items-center justify-between border-t border-ink-700 pt-3">
                         <LikeButton
                           initialCount={r.like_count}
                           initialLiked={r.user_liked}
                           onToggle={boundToggleReplyLike}
                         />
+                        {admin && <DeleteReplyButton replyId={r.id} threadId={id} />}
                       </div>
                     </div>
                   );
@@ -190,7 +205,13 @@ export default async function ThreadPage({
           )}
 
           {/* Reply form */}
-          {user ? (
+          {thread.closed ? (
+            <section className="mt-8 rounded-2xl border border-dashed border-ink-600 bg-ink-900/40 p-8 text-center">
+              <p className="text-mute">
+                Este hilo está cerrado. No se pueden agregar nuevas respuestas.
+              </p>
+            </section>
+          ) : user ? (
             <section className="mt-8">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-mute">
                 Tu respuesta

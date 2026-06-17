@@ -11,10 +11,9 @@ export function SolicitudActions({ providerId }: { providerId: string }) {
 
   async function approve() {
     setLoading("approve");
-    await supabase
-      .from("providers")
-      .update({ status: "aprobado", approved_at: new Date().toISOString() })
-      .eq("id", providerId);
+    // RPC: marca el proveedor aprobado Y el perfil del solicitante como
+    // estado_proveedor='aprobado' (un admin no puede tocar el profiles ajeno por RLS).
+    await supabase.rpc("approve_provider", { p_provider_id: providerId });
     router.refresh();
     setLoading(null);
   }

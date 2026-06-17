@@ -5,7 +5,14 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
       "PowerShell(if \\(-not \\(Test-Path \"C:\\\\Users\\\\Usuario\\\\.claude\\\\skills\"\\)\\) { New-Item -ItemType Directory -Path \"C:\\\\Users\\\\Usuario\\\\.claude\\\\skills\" -Force }; ls \"C:\\\\Users\\\\Usuario\\\\.claude\\\\skills\")",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npm run *)",
+      "Bash(git restore *)",
+      "Bash(rm \"app/rutas/[slug]/ReviewSection.tsx\" \"app/rutas/[slug]/actions.ts\" \"supabase/migrations/0002_route_reviews.sql\")",
+      "Bash(git push *)",
+      "mcp__supabase__list_projects"
     ]
   }
 }

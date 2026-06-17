@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Provider } from "@/lib/providers";
 import { TYPE_META } from "@/lib/providers";
 
@@ -18,7 +19,12 @@ export function ProviderCard({ provider }: { provider: Provider }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-xl text-bone">{provider.name}</h3>
+            <Link
+              href={`/proveedores/${provider.id}`}
+              className="font-display text-xl text-bone transition-colors hover:text-trail-400"
+            >
+              {provider.name}
+            </Link>
             {provider.featured && (
               <span className="rounded-full border border-trail-500/40 bg-trail-500/10 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-trail-400">
                 Destacado
@@ -56,12 +62,12 @@ export function ProviderCard({ provider }: { provider: Provider }) {
         >
           {provider.phone}
         </a>
-        <a
-          href={`mailto:contacto@lineabrava.mx?subject=Cotización: ${encodeURIComponent(provider.name)}`}
+        <Link
+          href={`/proveedores/${provider.id}`}
           className="rounded-full border border-trail-500/50 bg-trail-500/10 px-4 py-1.5 text-sm font-semibold text-trail-400 transition-colors hover:bg-trail-500/20"
         >
-          Solicitar cotización
-        </a>
+          Ver perfil y tienda
+        </Link>
       </div>
     </article>
   );

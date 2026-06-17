@@ -16,6 +16,7 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [modoProveedor, setModoProveedor] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -23,6 +24,20 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Modo proveedor (cookie lb_modo): muestra acceso a su panel. Las rutas/eventos
+  // siguen disponibles; al cambiar a modo usuario el proveedor las usa normal.
+  useEffect(() => {
+    const m = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("lb_modo="))
+      ?.split("=")[1];
+    setModoProveedor(m === "proveedor");
+  }, []);
+
+  const navLinks = modoProveedor
+    ? [{ href: "/proveedor/panel", label: "Mi negocio" }, ...links]
+    : links;
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 sm:px-4 sm:pt-4">
@@ -44,7 +59,7 @@ export function Navbar() {
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
-          {links.map((l) => (
+          {navLinks.map((l) => (
             <li key={l.href}>
               <Link
                 href={l.href}
@@ -96,7 +111,7 @@ export function Navbar() {
             className="absolute left-3 right-3 top-[4.5rem] rounded-3xl border border-ink-700 bg-ink-900/95 p-4 backdrop-blur-xl md:hidden"
           >
             <ul className="flex flex-col gap-1">
-              {links.map((l) => (
+              {navLinks.map((l) => (
                 <li key={l.href}>
                   <Link
                     href={l.href}

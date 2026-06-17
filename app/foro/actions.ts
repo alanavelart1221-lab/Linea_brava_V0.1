@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/auth";
 
 const CATEGORIES = ["Rutas", "Mecánica", "Overland & Equipo", "General"];
 
@@ -72,6 +73,14 @@ export async function createReply(
 
   const body = (formData.get("body") as string)?.trim();
   if (!body) return { error: "La respuesta no puede estar vacía." };
+
+  // No se responde en hilos cerrados por moderación.
+  const { data: thread } = await supabase
+    .from("forum_threads")
+    .select("closed")
+    .eq("id", threadId)
+    .single();
+  if (thread?.closed) return { error: "Este hilo está cerrado." };
 
   const authorName =
     user.user_metadata?.full_name ??
@@ -144,4 +153,32 @@ export async function toggleReplyLike(replyId: string, threadId: string): Promis
   }
 
   revalidatePath(`/foro/${threadId}`);
+}
+
+// --- Moderación (solo admin). La RLS de Supabase impone la seguridad real. ---
+
+export async function deleteThread(threadId: string): Promise<void> {
+  if (!(await isAdmin())) return;
+  const supabase = await createClient();
+  await supabase.from("forum_threads").delete().eq("id", threadId);
+  revalidatePath("/foro");
+  redirect("/foro");
+}
+
+export async function deleteReply(replyId: string, threadId: string): Promise<void> {
+  if (!(await isAdmin())) return;
+  const supabase = await createClient();
+  await supabase.from("forum_replies").delete().eq("id", replyId);
+  revalidatePath(`/foro/${threadId}`);
+}
+
+export async function toggleThreadClosed(
+  threadId: string,
+  closed: boolean
+): Promise<void> {
+  if (!(await isAdmin())) return;
+  const supabase = await createClient();
+  await supabase.from("forum_threads").update({ closed }).eq("id", threadId);
+  revalidatePath(`/foro/${threadId}`);
+  revalidatePath("/foro");
 }
