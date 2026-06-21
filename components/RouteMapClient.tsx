@@ -3,6 +3,16 @@
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { WAYPOINT_META, type Waypoint } from "@/lib/routes";
+
+function waypointIcon(emoji: string) {
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#1A1D21;border:2px solid #F59E0B;font-size:14px;line-height:1;">${emoji}</span>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+}
 
 // Custom amber pin via divIcon — avoids Leaflet's bundler-broken default marker images.
 const pin = L.divIcon({
@@ -18,10 +28,12 @@ export default function RouteMapClient({
   coords,
   track,
   name,
+  waypoints = [],
 }: {
   coords: { lat: number; lng: number };
   track: [number, number][];
   name: string;
+  waypoints?: Waypoint[];
 }) {
   return (
     <MapContainer
@@ -46,6 +58,18 @@ export default function RouteMapClient({
       <Marker position={[coords.lat, coords.lng]} icon={pin}>
         <Popup>{name}</Popup>
       </Marker>
+      {waypoints.map((w, i) => {
+        const meta = WAYPOINT_META[w.category] ?? WAYPOINT_META.otro;
+        return (
+          <Marker key={i} position={[w.lat, w.lng]} icon={waypointIcon(meta.emoji)}>
+            <Popup>
+              <strong>{w.name}</strong>
+              <br />
+              {meta.label}
+            </Popup>
+          </Marker>
+        );
+      })}
     </MapContainer>
   );
 }

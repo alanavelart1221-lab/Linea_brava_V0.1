@@ -9,19 +9,12 @@ export default async function AdminPage() {
   const { supabase, rol } = await requireAdmin();
   const esSuperadmin = rol === "superadmin";
 
-  const [provRes, rutasRes] = await Promise.all([
-    supabase
-      .from("providers")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pendiente"),
-    supabase
-      .from("user_routes")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-  ]);
+  const provRes = await supabase
+    .from("providers")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pendiente");
 
   const provPendientes = provRes.count ?? 0;
-  const rutasPendientes = rutasRes.count ?? 0;
 
   return (
     <>
@@ -47,9 +40,8 @@ export default async function AdminPage() {
           />
           <AdminCard
             href="/admin/rutas"
-            title="Rutas en revisión"
-            description="Aprueba o rechaza las rutas que envía la comunidad."
-            badge={rutasPendientes}
+            title="Rutas de la comunidad"
+            description="Destaca las mejores como «Calificada» u oculta las inapropiadas."
           />
           <AdminCard
             href="/admin/tips/nuevo"

@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { trails } from "@/lib/data";
+import { getApprovedRoutes, toListItem } from "@/lib/routes-data";
 import { RouteCard } from "./RouteCard";
 import { Reveal, RevealGroup } from "./Reveal";
 
-// A curated handful for the landing — the full set lives at /rutas.
-const featured = trails.slice(0, 3);
+export async function FeaturedTrails() {
+  // Un puñado curado para el landing — el set completo vive en /rutas.
+  const featured = (await getApprovedRoutes())
+    .filter((r) => r.origen === "oficial")
+    .slice(0, 3)
+    .map(toListItem);
 
-export function FeaturedTrails() {
   return (
     <section id="trails" className="shell scroll-mt-24 py-20 sm:py-28">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -26,8 +29,8 @@ export function FeaturedTrails() {
 
       <RevealGroup className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {featured.map((t, i) => (
-          <Reveal key={t.slug} delay={Math.min(i * 0.08, 0.24)}>
-            <RouteCard trail={t} priority={i === 0} />
+          <Reveal key={t.key} delay={Math.min(i * 0.08, 0.24)}>
+            <RouteCard route={t} priority={i === 0} />
           </Reveal>
         ))}
       </RevealGroup>

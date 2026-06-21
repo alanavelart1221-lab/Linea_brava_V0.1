@@ -4,14 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { trails } from "@/lib/data";
 
 const headlineWords = ["ENCUENTRA", "TU", "PRÓXIMA", "AVENTURA."];
 
-const routeCount = trails.length;
-const stateCount = new Set(trails.map((t) => t.state)).size;
-
-export function Hero() {
+export function Hero({ routeCount, stateCount }: { routeCount: number; stateCount: number }) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({

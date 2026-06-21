@@ -12,10 +12,13 @@ const Map = dynamic(() => import("./RouteMapClient"), {
   ),
 });
 
+import type { Waypoint } from "@/lib/routes";
+
 export function RouteMap(props: {
   coords: { lat: number; lng: number };
   track: [number, number][];
   name: string;
+  waypoints?: Waypoint[];
 }) {
   return (
     <div className="h-full w-full overflow-hidden rounded-xl2 border border-ink-700">

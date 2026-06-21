@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { RoutesExplorer } from "@/components/RoutesExplorer";
 import { Reveal } from "@/components/Reveal";
 import { RutasHero } from "@/components/RutasHero";
+import { getApprovedRoutes, toListItem } from "@/lib/routes-data";
 
 export const metadata: Metadata = {
   title: "Rutas todoterreno en México",
@@ -11,7 +12,11 @@ export const metadata: Metadata = {
     "Explora y filtra rutas todoterreno y overland calificadas por dificultad en todo México: Baja California, Querétaro, Chihuahua, San Luis Potosí y más.",
 };
 
-export default function RutasPage() {
+export const revalidate = 60;
+
+export default async function RutasPage() {
+  const items = (await getApprovedRoutes()).map(toListItem);
+
   return (
     <>
       <Navbar />
@@ -36,7 +41,7 @@ export default function RutasPage() {
         </section>
 
         <section className="shell py-12">
-          <RoutesExplorer />
+          <RoutesExplorer items={items} />
         </section>
       </main>
       <Footer />

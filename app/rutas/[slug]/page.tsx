@@ -5,14 +5,14 @@ import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { RouteMap } from "@/components/RouteMap";
+import { RouteReviews } from "@/components/RouteReviews";
 import { Reveal } from "@/components/Reveal";
-import { trails, getTrail, events, levelMeta } from "@/lib/data";
+import { events, levelMeta } from "@/lib/data";
+import { getRouteBySlug } from "@/lib/routes-data";
 import { formatEventDate, formatEventTime } from "@/lib/date";
 import { providers, TYPE_META } from "@/lib/providers";
 
-export function generateStaticParams() {
-  return trails.map((t) => ({ slug: t.slug }));
-}
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -20,12 +20,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const trail = getTrail(slug);
+  const trail = await getRouteBySlug(slug);
   if (!trail) return { title: "Ruta no encontrada" };
   return {
     title: `${trail.name} — ${trail.state}`,
-    description: trail.blurb,
-    openGraph: { images: [trail.image] },
+    description: trail.blurb ?? undefined,
+    openGraph: trail.image ? { images: [trail.image] } : undefined,
   };
 }
 
@@ -35,10 +35,12 @@ export default async function RouteDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const trail = getTrail(slug);
+  const trail = await getRouteBySlug(slug);
   if (!trail) notFound();
 
   const meta = levelMeta[trail.level];
+  const paragraphs = (trail.description ?? "").split(/\n\n+/).filter(Boolean);
+  const coords = trail.startCoords ?? { lat: 23.6, lng: -102.5 };
   const routeEvents = events.filter((e) => e.routeSlug === trail.slug);
   const nearbyProviders = providers
     .filter((p) => p.state === trail.state)
@@ -51,14 +53,18 @@ export default async function RouteDetail({
       <main>
         {/* Cover */}
         <section className="relative h-[64svh] min-h-[460px] w-full overflow-hidden">
-          <Image
-            src={trail.image}
-            alt={`${trail.name} — ${trail.region}, ${trail.state}`}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
+          {trail.image ? (
+            <Image
+              src={trail.image}
+              alt={`${trail.name} — ${trail.region ?? ""}, ${trail.state}`}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          ) : (
+            <div className="topo h-full w-full bg-gradient-to-br from-ink-800 to-ink-950" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/50 to-ink-950/30" />
           <div className="absolute inset-x-0 bottom-0">
             <div className="shell pb-10">
@@ -99,8 +105,8 @@ export default async function RouteDetail({
           <div className="shell grid grid-cols-2 gap-px py-2 sm:grid-cols-4">
             <Spec label="Distancia" value={`${trail.distanceKm} km`} />
             <Spec label="Desnivel" value={`${trail.elevationM} m`} />
-            <Spec label="Duración" value={trail.duration} />
-            <Spec label="Mejor temporada" value={trail.bestSeason} />
+            <Spec label="Duración" value={trail.duration ?? "—"} />
+            <Spec label="Mejor temporada" value={trail.bestSeason ?? "—"} />
           </div>
         </section>
 
@@ -111,7 +117,7 @@ export default async function RouteDetail({
             <Reveal>
               <h2 className="font-display text-4xl text-bone">La ruta</h2>
               <div className="mt-5 space-y-4 text-[1.05rem] leading-relaxed text-mute">
-                {trail.description.map((p, i) => (
+                {paragraphs.map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
@@ -156,16 +162,21 @@ export default async function RouteDetail({
                 ))}
               </ul>
             </Reveal>
+
+            {/* Reseñas */}
+            <Reveal className="mt-12">
+              <RouteReviews trailSlug={slug} />
+            </Reveal>
           </div>
 
           {/* Sticky aside */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
             {/* Map */}
             <div className="h-72 w-full">
-              <RouteMap coords={trail.coords} track={trail.track} name={trail.name} />
+              <RouteMap coords={coords} track={trail.track} name={trail.name} />
             </div>
             <Link
-              href={`/rutas/${trail.slug}/navegar`}
+              href={`/rutas/${slug}/navegar`}
               className="btn-primary mt-3 w-full"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

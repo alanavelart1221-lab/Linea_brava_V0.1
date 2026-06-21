@@ -8,6 +8,7 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   pending: { label: "En revisión", className: "border-yellow-500/40 bg-yellow-500/10 text-yellow-400" },
   approved: { label: "Publicada", className: "border-go-500/40 bg-go-500/10 text-go-400" },
   rejected: { label: "Rechazada", className: "border-red-500/40 bg-red-500/10 text-red-400" },
+  oculta: { label: "Oculta", className: "border-red-500/40 bg-red-500/10 text-red-400" },
 };
 
 export default async function PerfilPage() {
@@ -49,16 +50,16 @@ export default async function PerfilPage() {
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/mis-rutas/grabar" className="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="3" fill="currentColor" />
-              <path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            Grabar nueva ruta
-          </Link>
-          <Link href="/rutas" className="btn-ghost">
+        {/* App CTA — la grabación de rutas vive solo en la app móvil */}
+        <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-trail-500/30 bg-trail-500/5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-display text-lg text-bone">Graba tus rutas desde la app</p>
+            <p className="mt-1 text-sm text-mute">
+              La grabación con GPS y waypoints está en la app móvil de Línea Brava (próximamente).
+              Aquí en la web ves y exploras las rutas de la comunidad.
+            </p>
+          </div>
+          <Link href="/rutas" className="btn-ghost shrink-0">
             Explorar rutas
           </Link>
         </div>
@@ -83,12 +84,12 @@ export default async function PerfilPage() {
                     key={r.id}
                     className="card-line flex items-center justify-between gap-4 p-4"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-bone">{r.name}</p>
+                    <Link href={`/rutas/comunidad/${r.id}`} className="min-w-0 flex-1 group">
+                      <p className="truncate font-medium text-bone group-hover:text-trail-400">{r.name}</p>
                       <p className="mt-0.5 text-xs text-mute">
                         {r.state} · {r.level} · {r.distance_km ? `${r.distance_km} km` : "—"}
                       </p>
-                    </div>
+                    </Link>
                     <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${st.className}`}>
                       {st.label}
                     </span>

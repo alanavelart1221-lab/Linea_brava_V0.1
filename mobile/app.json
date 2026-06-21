@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Línea Brava",
+    "slug": "linea-brava",
+    "scheme": "lineabrava",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0C0E",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "mx.lineabrava.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road."
+      }
+    },
+    "android": {
+      "package": "mx.lineabrava.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road."
+        }
+      ],
+      "expo-asset"
+    ]
+  }
+}

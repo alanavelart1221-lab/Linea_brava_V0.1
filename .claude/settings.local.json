@@ -12,7 +12,16 @@
       "Bash(git restore *)",
       "Bash(rm \"app/rutas/[slug]/ReviewSection.tsx\" \"app/rutas/[slug]/actions.ts\" \"supabase/migrations/0002_route_reviews.sql\")",
       "Bash(git push *)",
-      "mcp__supabase__list_projects"
+      "mcp__supabase__list_projects",
+      "Bash(gh pr create --base main --head feat/roles-superadmin-proveedores-foro --title 'Roles: superadmin, switch de proveedor, tienda y moderación de foro' --body ' *)",
+      "PowerShell(\\(Get-Command gh -ErrorAction SilentlyContinue\\).Source)",
+      "Bash(npx expo *)",
+      "mcp__supabase__get_logs",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__search_docs",
+      "Bash(xargs -0 grep -l \"create table.*user_routes\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

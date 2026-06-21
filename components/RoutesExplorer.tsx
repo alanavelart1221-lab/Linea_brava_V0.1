@@ -1,23 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { trails, LEVELS, type TrailLevel } from "@/lib/data";
+import { LEVELS, type TrailLevel } from "@/lib/data";
+import type { RouteListItem } from "@/lib/routes";
 import { RouteCard } from "./RouteCard";
+import { CommunityRouteCard } from "./CommunityRouteCard";
 import { Reveal } from "./Reveal";
 
-const states = ["Todos", ...Array.from(new Set(trails.map((t) => t.state)))];
+export function RoutesExplorer({ items = [] }: { items?: RouteListItem[] }) {
+  const states = useMemo(
+    () => ["Todos", ...Array.from(new Set(items.map((i) => i.state))).sort()],
+    [items]
+  );
 
-export function RoutesExplorer() {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState<TrailLevel | "Todas">("Todas");
   const [state, setState] = useState("Todos");
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return trails.filter((t) => {
+    return items.filter((t) => {
       const matchesQuery =
         !q ||
-        [t.name, t.region, t.state, t.blurb, ...t.terrain]
+        [t.name, t.region ?? "", t.state, t.blurb ?? ""]
           .join(" ")
           .toLowerCase()
           .includes(q);
@@ -25,7 +30,7 @@ export function RoutesExplorer() {
       const matchesState = state === "Todos" || t.state === state;
       return matchesQuery && matchesLevel && matchesState;
     });
-  }, [query, level, state]);
+  }, [items, query, level, state]);
 
   return (
     <div>
@@ -92,9 +97,13 @@ export function RoutesExplorer() {
       {/* Grid */}
       {results.length > 0 ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((t, i) => (
-            <Reveal key={t.slug} delay={Math.min(i * 0.05, 0.3)}>
-              <RouteCard trail={t} priority={i < 3} />
+          {results.map((item, i) => (
+            <Reveal key={item.key} delay={Math.min(i * 0.05, 0.3)}>
+              {item.kind === "oficial" ? (
+                <RouteCard route={item} priority={i < 3} />
+              ) : (
+                <CommunityRouteCard route={item} />
+              )}
             </Reveal>
           ))}
         </div>
