@@ -12,14 +12,19 @@
       "supportsTablet": true,
       "bundleIdentifier": "mx.lineabrava.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road."
+        "NSLocationWhenInUseUsageDescription": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Línea Brava graba tu recorrido en segundo plano para que puedas seguir la ruta con la pantalla apagada.",
+        "UIBackgroundModes": ["location"]
       }
     },
     "android": {
       "package": "mx.lineabrava.app",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "plugins": [
@@ -27,7 +32,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road."
+          "locationWhenInUsePermission": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road.",
+          "locationAlwaysAndWhenInUsePermission": "Línea Brava graba tu recorrido en segundo plano para que puedas seguir la ruta con la pantalla apagada.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       "expo-asset"

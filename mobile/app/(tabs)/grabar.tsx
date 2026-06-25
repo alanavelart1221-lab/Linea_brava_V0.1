@@ -11,9 +11,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
+import { NavMapWebView } from "@/components/NavMapWebView";
 import { haversineKm, trackDistanceKm, validarTrack, type Point } from "@/lib/geo";
 import {
   guardarActividad,
@@ -31,6 +33,7 @@ const NIVELES: Nivel[] = ["Verde", "Azul", "Negro", "Pro"];
 export default function Grabar() {
   const router = useRouter();
   const { session } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [reviewMode, setReviewMode] = useState<ReviewMode>("choice");
@@ -58,6 +61,7 @@ export default function Grabar() {
   const startedAt = useRef<number>(0);
 
   const distance = trackDistanceKm(track);
+  const position: Point | null = track.length ? track[track.length - 1] : null;
 
   useEffect(() => {
     return () => {
@@ -194,6 +198,24 @@ export default function Grabar() {
     ]);
   }
 
+  function descartar() {
+    Alert.alert("¿Descartar actividad?", "Esto no se guardará.", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Descartar",
+        style: "destructive",
+        onPress: () => {
+          setTrack([]);
+          setWaypoints([]);
+          setElapsed(0);
+          setTitle("");
+          setReviewMode("choice");
+          setPhase("idle");
+        },
+      },
+    ]);
+  }
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
   // ---- Pantalla de revisión ----
@@ -231,6 +253,9 @@ export default function Grabar() {
             </Pressable>
             <Pressable style={styles.btnGhost} onPress={() => setReviewMode("ruta")} disabled={submitting}>
               <Text style={styles.btnGhostText}>Crear ruta de esta actividad</Text>
+            </Pressable>
+            <Pressable style={styles.btnText} onPress={descartar} disabled={submitting}>
+              <Text style={styles.btnTextLabel}>Descartar actividad</Text>
             </Pressable>
             <Text style={styles.hintSmall}>
               Tu actividad es privada. Crear ruta la publica en la comunidad (la actividad se
@@ -272,36 +297,53 @@ export default function Grabar() {
     );
   }
 
-  // ---- Pantalla de grabación ----
-  return (
-    <View style={[styles.container, { padding: 24, justifyContent: "center" }]}>
-      <View style={styles.statsRow}>
-        <Stat label="Distancia" value={`${distance.toFixed(2)} km`} />
-        <Stat label="Tiempo" value={formatTime(elapsed)} />
-        <Stat label="Puntos" value={String(track.length)} />
-        <Stat label="Waypoints" value={String(waypoints.length)} />
+  // ---- Pantalla inicial (sin grabar todavía) ----
+  if (phase === "idle") {
+    return (
+      <View style={[styles.container, { padding: 24, justifyContent: "center" }]}>
+        <View style={styles.statsRow}>
+          <Stat label="Distancia" value={`${distance.toFixed(2)} km`} />
+          <Stat label="Tiempo" value={formatTime(elapsed)} />
+          <Stat label="Puntos" value={String(track.length)} />
+          <Stat label="Waypoints" value={String(waypoints.length)} />
+        </View>
+        <Text style={styles.hint}>
+          Sal al terreno, presiona iniciar y el GPS grabará tu ruta automáticamente.
+        </Text>
+        <Pressable style={styles.btnPrimary} onPress={startRecording}>
+          <Text style={styles.btnPrimaryText}>● Iniciar grabación</Text>
+        </Pressable>
       </View>
+    );
+  }
 
-      {phase === "idle" ? (
-        <>
-          <Text style={styles.hint}>
-            Sal al terreno, presiona iniciar y el GPS grabará tu ruta automáticamente.
-          </Text>
-          <Pressable style={styles.btnPrimary} onPress={startRecording}>
-            <Text style={styles.btnPrimaryText}>● Iniciar grabación</Text>
-          </Pressable>
-        </>
-      ) : (
-        <>
-          <Text style={[styles.hint, { color: colors.trail400 }]}>● Grabando… mantén la app abierta.</Text>
-          <Pressable style={styles.btnWaypoint} onPress={openWaypoint}>
-            <Text style={styles.btnWaypointText}>+ Marcar punto (waypoint)</Text>
-          </Pressable>
-          <Pressable style={styles.btnStop} onPress={stopRecording}>
-            <Text style={styles.btnGhostText}>Terminar</Text>
-          </Pressable>
-        </>
-      )}
+  // ---- Pantalla de grabación (con mapa en vivo) ----
+  return (
+    <View style={styles.container}>
+      <NavMapWebView
+        routeTrack={[]}
+        waypoints={waypoints}
+        userTrack={track}
+        position={position}
+        userColor={colors.trail500}
+        markerColor={colors.go500}
+      />
+
+      <View style={[styles.panel, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.statsRow, { marginBottom: 0 }]}>
+          <Stat label="Distancia" value={`${distance.toFixed(2)} km`} />
+          <Stat label="Tiempo" value={formatTime(elapsed)} />
+          <Stat label="Puntos" value={String(track.length)} />
+          <Stat label="Waypoints" value={String(waypoints.length)} />
+        </View>
+        <Text style={[styles.live, { color: colors.trail400 }]}>● Grabando… mantén la app abierta.</Text>
+        <Pressable style={styles.btnWaypoint} onPress={openWaypoint}>
+          <Text style={styles.btnWaypointText}>+ Marcar punto (waypoint)</Text>
+        </Pressable>
+        <Pressable style={styles.btnStop} onPress={stopRecording}>
+          <Text style={styles.btnGhostText}>Terminar</Text>
+        </Pressable>
+      </View>
 
       {/* Modal de waypoint */}
       <Modal visible={wpOpen} transparent animationType="slide" onRequestClose={() => setWpOpen(false)}>
@@ -360,6 +402,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.ink950 },
+  panel: {
+    backgroundColor: colors.ink900,
+    borderTopWidth: 1,
+    borderTopColor: colors.ink700,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 14,
+  },
+  live: { fontSize: 13, textAlign: "center", fontWeight: "600" },
   statsRow: { flexDirection: "row", gap: 8, marginBottom: 24 },
   stat: { flex: 1, borderWidth: 1, borderColor: colors.ink700, backgroundColor: colors.ink900, borderRadius: 12, paddingVertical: 12, alignItems: "center" },
   statLabel: { color: colors.mute, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 },

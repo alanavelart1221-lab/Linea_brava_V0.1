@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
@@ -34,6 +34,7 @@ type RouteRow = {
 
 export default function RutaDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { session } = useAuth();
   const [route, setRoute] = useState<RouteRow | null>(null);
   const [reviews, setReviews] = useState<RouteReview[]>([]);
@@ -131,6 +132,15 @@ export default function RutaDetalle() {
         {route.calificada && <Text style={styles.badge}>★ Ruta calificada</Text>}
       </View>
 
+      {(route.track?.length ?? 0) > 1 && (
+        <Pressable
+          style={styles.hacerBtn}
+          onPress={() => router.push(session ? `/hacer-ruta/${id}` : "/login")}
+        >
+          <Text style={styles.hacerBtnText}>▶ Hacer ruta</Text>
+        </Pressable>
+      )}
+
       {route.description ? <Text style={styles.desc}>{route.description}</Text> : null}
 
       {/* Reseñas */}
@@ -191,6 +201,8 @@ const styles = StyleSheet.create({
   title: { color: colors.bone, fontSize: 26, fontWeight: "800" },
   meta: { color: colors.mute, fontSize: 13, marginTop: 6 },
   badge: { color: colors.trail300, fontSize: 13, fontWeight: "800", marginTop: 8 },
+  hacerBtn: { backgroundColor: colors.trail500, paddingVertical: 15, borderRadius: 999, alignItems: "center" },
+  hacerBtnText: { color: colors.ink950, fontSize: 16, fontWeight: "700" },
   desc: { color: colors.mute, fontSize: 15, lineHeight: 22 },
   divider: { height: 1, backgroundColor: colors.ink700 },
   section: { color: colors.bone, fontSize: 20, fontWeight: "800" },

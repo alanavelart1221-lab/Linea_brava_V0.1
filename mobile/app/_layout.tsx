@@ -38,6 +38,7 @@ function RootNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="ruta/[id]" options={{ title: "Ruta" }} />
+      <Stack.Screen name="hacer-ruta/[id]" options={{ title: "Hacer ruta" }} />
       <Stack.Screen name="foro/[id]" options={{ title: "Hilo" }} />
       <Stack.Screen name="foro/nuevo" options={{ title: "Nuevo hilo" }} />
       <Stack.Screen name="proveedor/[id]" options={{ title: "Proveedor" }} />
