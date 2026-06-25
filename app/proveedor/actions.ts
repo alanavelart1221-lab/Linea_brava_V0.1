@@ -163,22 +163,15 @@ export async function reenviarSolicitud(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Debes iniciar sesión." };
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("providers")
     .update({ estado: "pendiente" })
-    .eq("id", providerId)
-    .select("name, city, state")
-    .single<{ name: string; city: string; state: string }>();
+    .eq("id", providerId);
 
-  if (error || !data) return { error: "No se pudo reenviar la solicitud." };
+  if (error) return { error: "No se pudo reenviar la solicitud." };
 
-  await supabase.rpc("notify_admins", {
-    p_tipo: "nueva_solicitud",
-    p_titulo: "Solicitud reenviada a revisión",
-    p_cuerpo: `${data.name} (${data.city}, ${data.state}) actualizó su información.`,
-    p_url: "/admin/proveedores",
-    p_provider_id: providerId,
-  });
+  // El aviso a los administradores lo dispara el trigger en `providers` al
+  // volver el estado a 'pendiente'.
 
   revalidatePath("/proveedor/panel");
   return { error: null };

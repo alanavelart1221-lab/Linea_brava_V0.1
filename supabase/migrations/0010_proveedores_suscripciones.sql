@@ -238,6 +238,9 @@ create policy notifications_update_own on public.notifications
 
 
 -- 11) Helper: notificar a todos los admins -----------------------------------
+-- NO se expone como RPC al cliente (se revoca EXECUTE más abajo): solo la llama
+-- el trigger de abajo, para que el texto lo construya el servidor y un usuario
+-- no pueda spamear a los admins con contenido arbitrario.
 create or replace function public.notify_admins(
   p_tipo text, p_titulo text, p_cuerpo text, p_url text, p_provider_id uuid
 )
@@ -253,6 +256,34 @@ begin
   where p.rol in ('admin', 'superadmin');
 end;
 $$;
+
+-- Trigger: avisa a los admins cuando una solicitud entra (o vuelve) a 'pendiente'.
+-- Cubre el alta inicial y el reenvío a revisión, sin que el cliente llame nada.
+create or replace function public.notify_admins_provider_pendiente()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.estado = 'pendiente'
+     and (tg_op = 'INSERT' or old.estado is distinct from 'pendiente') then
+    perform public.notify_admins(
+      'nueva_solicitud',
+      'Nueva solicitud de proveedor',
+      new.name || ' (' || new.city || ', ' || new.state || ') espera revisión.',
+      '/admin/proveedores',
+      new.id
+    );
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notify_admins_provider on public.providers;
+create trigger trg_notify_admins_provider
+  after insert or update on public.providers
+  for each row execute function public.notify_admins_provider_pendiente();
 
 
 -- 12) RPCs de moderación de proveedores --------------------------------------
@@ -453,9 +484,12 @@ grant execute on function public.reject_provider(uuid, text)        to authentic
 grant execute on function public.request_provider_info(uuid, text)  to authenticated;
 grant execute on function public.suspend_provider(uuid)             to authenticated;
 grant execute on function public.reactivate_provider(uuid)          to authenticated;
-grant execute on function public.notify_admins(text, text, text, text, uuid) to authenticated;
 -- approve_provider ya tenía grant en 0002; lo reafirmamos por si acaso.
 grant execute on function public.approve_provider(uuid)             to authenticated;
+
+-- notify_admins NO debe ser invocable por el cliente: solo la usa el trigger
+-- (que es SECURITY DEFINER y la puede llamar igual). Cierra el vector de spam.
+revoke execute on function public.notify_admins(text, text, text, text, uuid) from anon, authenticated;
 
 
 -- ████████████████████████████████████████████████████████████████████████████

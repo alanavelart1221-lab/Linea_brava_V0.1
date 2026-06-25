@@ -125,14 +125,8 @@ export async function solicitarProveedor(
     return { error: "No se pudo enviar la solicitud. Intenta de nuevo." };
   }
 
-  // Avisa a los administradores (no bloquea el éxito si falla).
-  await supabase.rpc("notify_admins", {
-    p_tipo: "nueva_solicitud",
-    p_titulo: "Nueva solicitud de proveedor",
-    p_cuerpo: `${name} (${city}, ${state}) espera revisión.`,
-    p_url: "/admin/proveedores",
-    p_provider_id: inserted.id,
-  });
+  // El aviso a los administradores lo dispara un trigger en `providers`
+  // cuando el estado entra en 'pendiente' (no se llama nada desde el cliente).
 
   return { error: null, success: true };
 }
