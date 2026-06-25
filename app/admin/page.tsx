@@ -12,7 +12,7 @@ export default async function AdminPage() {
   const provRes = await supabase
     .from("providers")
     .select("id", { count: "exact", head: true })
-    .eq("status", "pendiente");
+    .in("estado", ["pendiente", "info_pendiente"]);
 
   const provPendientes = provRes.count ?? 0;
 
@@ -34,8 +34,8 @@ export default async function AdminPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <AdminCard
             href="/admin/proveedores"
-            title="Solicitudes de proveedor"
-            description="Revisa y aprueba negocios que piden aparecer en el directorio."
+            title="Administración de proveedores"
+            description="Aprueba, rechaza, pide información, suspende o reactiva negocios del directorio."
             badge={provPendientes}
           />
           <AdminCard

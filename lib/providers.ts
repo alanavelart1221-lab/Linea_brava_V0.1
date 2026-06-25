@@ -44,9 +44,11 @@ export interface Provider {
   logo_url: string | null;
   gallery: string[];
   featured: boolean;
-  // Prueba / suscripción
+  // Prueba / suscripción / moderación
   trial_start: string | null;
   trial_end: string | null;
+  rejected_reason: string | null;
+  info_requested: string | null;
 }
 
 // Producto / accesorio de la tienda de un proveedor (tabla `provider_products`).
@@ -126,6 +128,16 @@ export function esVisiblePublico(estado: ProviderEstado): boolean {
 // Estados públicos, para queries (.in("estado", ESTADOS_PUBLICOS)).
 export const ESTADOS_PUBLICOS: ProviderEstado[] = ["en_prueba", "activo"];
 
+// Formatea una fecha ISO a "5 mar 2026" (es-MX). Devuelve "—" si es null.
+export function fmtFechaCorta(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 // Días restantes de prueba (redondeados hacia arriba). null si no hay prueba.
 // Devuelve 0 si ya venció.
 export function diasRestantesPrueba(trialEnd: string | null): number | null {
@@ -137,7 +149,7 @@ export function diasRestantesPrueba(trialEnd: string | null): number | null {
 
 // Columnas de `providers` necesarias para construir un `Provider` en el cliente.
 export const PROVIDER_COLUMNS =
-  "id, name, type, estado, state, city, description, specialty, phone, email, whatsapp, website, address, servicios, marcas, social, logo_url, gallery, featured, trial_start, trial_end";
+  "id, name, type, estado, state, city, description, specialty, phone, email, whatsapp, website, address, servicios, marcas, social, logo_url, gallery, featured, trial_start, trial_end, rejected_reason, info_requested";
 
 // Fila cruda de Supabase (columnas nullable). Se mapea con `mapProviderRow`.
 export interface ProviderRow {
@@ -162,6 +174,8 @@ export interface ProviderRow {
   featured: boolean;
   trial_start: string | null;
   trial_end: string | null;
+  rejected_reason: string | null;
+  info_requested: string | null;
 }
 
 // Normaliza una fila de Supabase al modelo `Provider` que usa la UI.
@@ -188,6 +202,8 @@ export function mapProviderRow(p: ProviderRow): Provider {
     featured: p.featured,
     trial_start: p.trial_start,
     trial_end: p.trial_end,
+    rejected_reason: p.rejected_reason,
+    info_requested: p.info_requested,
   };
 }
 
