@@ -1,8 +1,9 @@
-import { stats } from "@/lib/data";
+import { getHomeStats } from "@/lib/home-stats";
 import { CountUp } from "./CountUp";
 import { Reveal, RevealGroup } from "./Reveal";
 
-export function Stats() {
+export async function Stats() {
+  const stats = await getHomeStats();
   return (
     <section className="shell py-20 sm:py-28">
       <RevealGroup className="grid grid-cols-2 gap-px overflow-hidden rounded-xl2 border border-ink-700 bg-ink-700 lg:grid-cols-4">

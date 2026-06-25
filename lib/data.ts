@@ -10,7 +10,6 @@ export interface EventItem {
   spots: number;
   spotsLeft: number;
   tag: string;
-  routeSlug?: string;
 }
 
 export interface Stat {
@@ -28,62 +27,6 @@ export interface Voice {
 
 // Próxima salida insignia — alimenta el contador (Día de la Independencia).
 export const NEXT_RUN_ISO = "2026-09-16T07:00:00";
-
-export const stats: Stat[] = [
-  { value: 4200, suffix: "+", label: "Miembros activos" },
-  { value: 318, suffix: "", label: "Rutas en el directorio" },
-  { value: 27, suffix: "", label: "Estados con rutas" },
-  { value: 96, suffix: "%", label: "Volverían a la ruta" },
-];
-
-
-
-export const events: EventItem[] = [
-  {
-    id: "ev-1",
-    date: "2026-09-16T07:00:00",
-    title: "Salida de la Independencia — Cañón del Diablo",
-    location: "Entrada Sierra San Pedro Mártir",
-    level: "Negro",
-    spots: 40,
-    spotsLeft: 6,
-    tag: "Insignia",
-    routeSlug: "canon-del-diablo",
-  },
-  {
-    id: "ev-2",
-    date: "2026-09-27T08:30:00",
-    title: "Convoy al Amanecer — Sierra Gorda",
-    location: "Campamento base, Jalpan",
-    level: "Azul",
-    spots: 60,
-    spotsLeft: 22,
-    tag: "Para principiantes",
-    routeSlug: "sierra-gorda",
-  },
-  {
-    id: "ev-3",
-    date: "2026-10-10T16:00:00",
-    title: "Travesía Nocturna — Laguna Salada",
-    location: "Acceso 3, Mexicali",
-    level: "Verde",
-    spots: 50,
-    spotsLeft: 31,
-    tag: "Overland",
-    routeSlug: "laguna-salada",
-  },
-  {
-    id: "ev-4",
-    date: "2026-10-24T06:00:00",
-    title: "Expedición Barrancas del Cobre",
-    location: "Punto de reunión, Creel",
-    level: "Pro",
-    spots: 16,
-    spotsLeft: 3,
-    tag: "Avanzado",
-    routeSlug: "barrancas-del-cobre",
-  },
-];
 
 export const voices: Voice[] = [
   {

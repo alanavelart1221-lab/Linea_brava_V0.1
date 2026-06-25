@@ -2,31 +2,14 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal, RevealGroup } from "@/components/Reveal";
-import { createClient } from "@/lib/supabase/server";
 import { levelMeta } from "@/lib/data";
 import { formatEventDate, formatEventTime } from "@/lib/date";
-import type { EventItem } from "@/lib/data";
+import { getApprovedEvents } from "@/lib/events-data";
 
 export const revalidate = 60;
 
 export default async function EventosPage() {
-  const supabase = await createClient();
-  const { data: userEvents } = await supabase
-    .from("user_events")
-    .select("*")
-    .eq("status", "approved")
-    .order("date", { ascending: true });
-
-  const allEvents: EventItem[] = (userEvents ?? []).map((e) => ({
-    id: e.id,
-    date: e.date,
-    title: e.title,
-    location: e.location,
-    level: e.level,
-    spots: e.spots,
-    spotsLeft: e.spots_left,
-    tag: e.tag,
-  }));
+  const allEvents = await getApprovedEvents();
 
   return (
     <>

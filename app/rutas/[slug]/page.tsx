@@ -7,8 +7,9 @@ import { Footer } from "@/components/Footer";
 import { RouteMap } from "@/components/RouteMap";
 import { RouteReviews } from "@/components/RouteReviews";
 import { Reveal } from "@/components/Reveal";
-import { events, levelMeta } from "@/lib/data";
+import { levelMeta } from "@/lib/data";
 import { getRouteBySlug } from "@/lib/routes-data";
+import { getUpcomingEventsByState } from "@/lib/events-data";
 import { formatEventDate, formatEventTime } from "@/lib/date";
 import { providers, TYPE_META } from "@/lib/providers";
 
@@ -41,7 +42,7 @@ export default async function RouteDetail({
   const meta = levelMeta[trail.level];
   const paragraphs = (trail.description ?? "").split(/\n\n+/).filter(Boolean);
   const coords = trail.startCoords ?? { lat: 23.6, lng: -102.5 };
-  const routeEvents = events.filter((e) => e.routeSlug === trail.slug);
+  const routeEvents = await getUpcomingEventsByState(trail.state);
   const nearbyProviders = providers
     .filter((p) => p.state === trail.state)
     .sort((a, b) => Number(b.featured) - Number(a.featured))
