@@ -4,9 +4,10 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { TYPE_META } from "@/lib/providers";
-import type { ProviderType, ProviderProduct } from "@/lib/providers";
+import type { ProviderType, ProviderProduct, ProviderService } from "@/lib/providers";
+import { QuoteForm } from "./QuoteForm";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 type ProviderRow = {
   id: string;
@@ -45,6 +46,22 @@ export default async function ProveedorDetallePage({
     .order("created_at", { ascending: false });
 
   const products = (productsData as ProviderProduct[] | null) ?? [];
+
+  const { data: servicesData } = await supabase
+    .from("provider_services")
+    .select("id, provider_id, name, description, price, currency, created_at")
+    .eq("provider_id", id)
+    .order("created_at", { ascending: false });
+
+  const services = (servicesData as ProviderService[] | null) ?? [];
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const defaultNombre =
+    (user?.user_metadata?.full_name as string) ?? user?.email?.split("@")[0] ?? "";
+  const defaultContacto = user?.email ?? "";
+
   const meta = TYPE_META[provider.type as ProviderType];
 
   return (
@@ -115,7 +132,7 @@ export default async function ProveedorDetallePage({
                 </a>
               )}
               <a
-                href={`mailto:contacto@lineabrava.mx?subject=Cotización: ${encodeURIComponent(provider.name)}`}
+                href="#cotizar"
                 className="btn-primary text-center"
               >
                 Solicitar cotización
@@ -123,6 +140,30 @@ export default async function ProveedorDetallePage({
             </div>
           </div>
         </section>
+
+        {/* Servicios */}
+        {services.length > 0 && (
+          <section className="mt-12">
+            <h2 className="h3 mb-6 text-bone">Servicios</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {services.map((s) => (
+                <li key={s.id} className="card-line p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium text-bone">{s.name}</p>
+                    {s.price != null && (
+                      <p className="shrink-0 text-sm text-trail-500">
+                        ${s.price.toLocaleString("es-MX")} {s.currency}
+                      </p>
+                    )}
+                  </div>
+                  {s.description && (
+                    <p className="mt-1.5 text-sm text-mute">{s.description}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Tienda / Accesorios */}
         <section className="mt-12">
@@ -146,6 +187,16 @@ export default async function ProveedorDetallePage({
               ))}
             </div>
           )}
+        </section>
+
+        {/* Cotización */}
+        <section id="cotizar" className="mt-12 max-w-xl scroll-mt-28">
+          <QuoteForm
+            providerId={provider.id}
+            isLoggedIn={!!user}
+            defaultNombre={defaultNombre}
+            defaultContacto={defaultContacto}
+          />
         </section>
       </main>
       <Footer />

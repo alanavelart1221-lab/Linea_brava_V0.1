@@ -72,6 +72,79 @@ export async function addProduct(
   return { error: null, success: true };
 }
 
+export type ServiceState = { error: string | null; success?: boolean } | null;
+
+/** Alta de un servicio. La RLS exige ser el dueño del proveedor (o admin). */
+export async function addService(
+  providerId: string,
+  _prev: ServiceState,
+  formData: FormData
+): Promise<ServiceState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const name = (formData.get("name") as string)?.trim();
+  if (!name) return { error: "El nombre del servicio es obligatorio." };
+
+  const description = (formData.get("description") as string)?.trim() || null;
+
+  const priceRaw = (formData.get("price") as string)?.trim();
+  let price: number | null = null;
+  if (priceRaw) {
+    price = Number(priceRaw);
+    if (Number.isNaN(price) || price < 0) return { error: "Precio inválido." };
+  }
+
+  const { error } = await supabase.from("provider_services").insert({
+    provider_id: providerId,
+    name,
+    description,
+    price,
+  });
+
+  if (error) return { error: "No se pudo guardar el servicio. Intenta de nuevo." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null, success: true };
+}
+
+/** Borra un servicio. La RLS exige ser el dueño (o admin). */
+export async function deleteService(
+  serviceId: string,
+  providerId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("provider_services")
+    .delete()
+    .eq("id", serviceId);
+  if (error) return { error: "No se pudo eliminar." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null };
+}
+
+/** El proveedor cambia el estado de una cotización recibida. */
+export async function setQuoteEstado(
+  quoteId: string,
+  estado: "nueva" | "atendida" | "descartada"
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("quote_requests")
+    .update({ estado })
+    .eq("id", quoteId);
+  if (error) return { error: "No se pudo actualizar." };
+
+  revalidatePath("/proveedor/panel");
+  return { error: null };
+}
+
 export type PerfilState = { error: string | null; success?: boolean } | null;
 
 function parseList(raw: string | undefined, max: number): string[] {

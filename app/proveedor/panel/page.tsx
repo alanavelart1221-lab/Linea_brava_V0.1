@@ -7,19 +7,26 @@ import {
   ESTADO_META,
   PRECIO_SUSCRIPCION_MXN,
   PROVIDER_COLUMNS,
+  QUOTE_ESTADO_META,
   TYPE_META,
   diasRestantesPrueba,
   esVisiblePublico,
+  fmtFechaCorta,
   mapProviderRow,
   type Provider,
   type ProviderEstado,
   type ProviderPayment,
   type ProviderProduct,
   type ProviderRow,
+  type ProviderService,
   type ProviderSubscription,
+  type QuoteRequest,
 } from "@/lib/providers";
 import { ProductForm } from "./ProductForm";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { ServicioForm } from "./ServicioForm";
+import { DeleteServiceButton } from "./DeleteServiceButton";
+import { QuoteEstadoControls } from "./QuoteEstadoControls";
 import { PerfilForm } from "./PerfilForm";
 import { ReenviarButton } from "./ReenviarButton";
 import { ActivarSuscripcionButton } from "./ActivarSuscripcionButton";
@@ -176,14 +183,12 @@ export default async function ProveedorPanelPage({
 
             {seccion === "suscripcion" && <SuscripcionSection provider={provider} />}
 
-            {seccion === "servicios" && (
-              <Stub title="Servicios" detalle="Pronto podrás publicar el catálogo de servicios de tu negocio." />
-            )}
+            {seccion === "servicios" && <ServiciosSection providerId={provider.id} />}
+
+            {seccion === "cotizaciones" && <CotizacionesSection providerId={provider.id} />}
+
             {seccion === "proyectos" && (
               <Stub title="Proyectos" detalle="Pronto podrás mostrar tus proyectos y trabajos realizados." />
-            )}
-            {seccion === "cotizaciones" && (
-              <Stub title="Cotizaciones" detalle="Aquí recibirás y responderás solicitudes de cotización de la comunidad." />
             )}
             {seccion === "promociones" && (
               <Stub title="Promociones" detalle="Pronto podrás crear promociones y descuentos para los miembros." />
@@ -342,6 +347,103 @@ async function ProductosSection({ providerId }: { providerId: string }) {
           )}
         </div>
       </div>
+    </Section>
+  );
+}
+
+async function ServiciosSection({ providerId }: { providerId: string }) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("provider_services")
+    .select("id, provider_id, name, description, price, currency, created_at")
+    .eq("provider_id", providerId)
+    .order("created_at", { ascending: false });
+  const servicios = (data as ProviderService[] | null) ?? [];
+
+  return (
+    <Section title="Servicios">
+      <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
+        <div className="card-line h-fit p-6">
+          <h3 className="mb-5 font-display text-xl text-bone">Agregar servicio</h3>
+          <ServicioForm providerId={providerId} />
+        </div>
+        <div>
+          <h3 className="mb-5 font-display text-xl text-bone">
+            Mis servicios <span className="text-base font-normal text-mute">({servicios.length})</span>
+          </h3>
+          {servicios.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-ink-600 bg-ink-900/40 p-10 text-center">
+              <p className="text-mute">Aún no has agregado servicios.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {servicios.map((s) => (
+                <li key={s.id} className="card-line flex items-start gap-4 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-bone">{s.name}</p>
+                    {s.description && (
+                      <p className="mt-1 text-sm text-mute">{s.description}</p>
+                    )}
+                    {s.price != null && (
+                      <p className="mt-1 text-sm text-trail-500">
+                        ${s.price.toLocaleString("es-MX")} {s.currency}
+                      </p>
+                    )}
+                  </div>
+                  <DeleteServiceButton serviceId={s.id} providerId={providerId} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+async function CotizacionesSection({ providerId }: { providerId: string }) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("quote_requests")
+    .select("id, provider_id, user_id, nombre, contacto, mensaje, estado, created_at")
+    .eq("provider_id", providerId)
+    .order("created_at", { ascending: false });
+  const cotizaciones = (data as QuoteRequest[] | null) ?? [];
+
+  return (
+    <Section title="Cotizaciones">
+      {cotizaciones.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink-600 bg-ink-900/40 p-14 text-center">
+          <p className="text-mute">
+            Aún no has recibido solicitudes de cotización. Aparecerán aquí cuando un
+            miembro te contacte desde tu perfil.
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {cotizaciones.map((q) => {
+            const meta = QUOTE_ESTADO_META[q.estado];
+            return (
+              <li key={q.id} className="card-line p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-bone">{q.nombre}</span>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${meta.className}`}>
+                        {meta.label}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-trail-400">{q.contacto}</p>
+                    <p className="mt-3 max-w-2xl text-sm text-mute">{q.mensaje}</p>
+                    <p className="mt-2 text-xs text-mute/60">{fmtFechaCorta(q.created_at)}</p>
+                  </div>
+                  <QuoteEstadoControls quoteId={q.id} estado={q.estado} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </Section>
   );
 }

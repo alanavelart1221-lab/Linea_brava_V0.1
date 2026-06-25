@@ -63,6 +63,38 @@ export interface ProviderProduct {
   created_at: string;
 }
 
+// Servicio del proveedor (tabla `provider_services`).
+export interface ProviderService {
+  id: string;
+  provider_id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  currency: string;
+  created_at: string;
+}
+
+// Estado de una solicitud de cotización.
+export type QuoteEstado = "nueva" | "atendida" | "descartada";
+
+// Solicitud de cotización (tabla `quote_requests`).
+export interface QuoteRequest {
+  id: string;
+  provider_id: string;
+  user_id: string | null;
+  nombre: string;
+  contacto: string;
+  mensaje: string;
+  estado: QuoteEstado;
+  created_at: string;
+}
+
+export const QUOTE_ESTADO_META: Record<QuoteEstado, { label: string; className: string }> = {
+  nueva:      { label: "Nueva",      className: "border-trail-500/40 bg-trail-500/10 text-trail-400" },
+  atendida:   { label: "Atendida",   className: "border-go-500/40 bg-go-500/10 text-go-400" },
+  descartada: { label: "Descartada", className: "border-ink-500/50 bg-ink-700/40 text-mute" },
+};
+
 // Suscripción del proveedor (tabla `provider_subscriptions`).
 export interface ProviderSubscription {
   id: string;
