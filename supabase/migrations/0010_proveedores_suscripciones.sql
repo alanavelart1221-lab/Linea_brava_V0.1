@@ -451,28 +451,34 @@ begin
       update public.providers set estado = 'suspendido' where id = r.id;
       update public.provider_subscriptions set status = 'past_due', updated_at = now()
         where provider_id = r.id;
-      insert into public.notifications (user_id, provider_id, tipo, titulo, cuerpo, url)
-      values (
-        r.user_id, r.id, 'suspendido',
-        'Tu prueba terminó',
-        'Activa la suscripción de $500 MXN/mes para volver a aparecer en Línea Brava.',
-        '/proveedor/panel'
-      )
-      on conflict (provider_id, tipo) do nothing;
+      if not exists (
+        select 1 from public.notifications
+        where provider_id = r.id and tipo = 'suspendido'
+      ) then
+        insert into public.notifications (user_id, provider_id, tipo, titulo, cuerpo, url)
+        values (
+          r.user_id, r.id, 'suspendido',
+          'Tu prueba terminó',
+          'Activa la suscripción de $500 MXN/mes para volver a aparecer en Línea Brava.',
+          '/proveedor/panel'
+        );
+      end if;
       continue;
     end if;
 
-    -- Recordatorios 15 / 5 / 1 días.
+    -- Recordatorios 15 / 5 / 1 días (sin repetir).
     v_dias := ceil(extract(epoch from (r.trial_end - now())) / 86400.0)::int;
-    if v_dias in (15, 5, 1) then
+    if v_dias in (15, 5, 1) and not exists (
+      select 1 from public.notifications
+      where provider_id = r.id and tipo = 'prueba_' || v_dias
+    ) then
       insert into public.notifications (user_id, provider_id, tipo, titulo, cuerpo, url)
       values (
         r.user_id, r.id, 'prueba_' || v_dias,
         'Tu prueba termina en ' || v_dias || ' día' || case when v_dias = 1 then '' else 's' end,
         'Activa tu suscripción de $500 MXN/mes para seguir apareciendo en el directorio.',
         '/proveedor/panel'
-      )
-      on conflict (provider_id, tipo) do nothing;
+      );
     end if;
   end loop;
 end;
