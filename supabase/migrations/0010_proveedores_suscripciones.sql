@@ -134,7 +134,7 @@ begin
      and not (
        auth.uid() = new.user_id
        and new.estado = 'pendiente'
-       and old.estado in ('borrador', 'info_pendiente')
+       and old.estado in ('borrador', 'info_pendiente', 'rechazado')
      ) then
     raise exception 'No autorizado para cambiar el estado del proveedor';
   end if;
