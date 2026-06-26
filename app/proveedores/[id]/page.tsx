@@ -3,9 +3,16 @@ import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
-import { TYPE_META } from "@/lib/providers";
-import type { ProviderType, ProviderProduct, ProviderService } from "@/lib/providers";
+import { TYPE_META, fmtFechaCorta } from "@/lib/providers";
+import type {
+  ProviderType,
+  ProviderProduct,
+  ProviderService,
+  ProviderPromotion,
+} from "@/lib/providers";
 import { QuoteForm } from "./QuoteForm";
+import { TrackView } from "./TrackView";
+import { ContactoTracker } from "./ContactoTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +62,15 @@ export default async function ProveedorDetallePage({
 
   const services = (servicesData as ProviderService[] | null) ?? [];
 
+  // La RLS solo devuelve al público las promociones activas y vigentes.
+  const { data: promosData } = await supabase
+    .from("provider_promotions")
+    .select("id, provider_id, titulo, descripcion, descuento, fecha_inicio, fecha_fin, activo, created_at")
+    .eq("provider_id", id)
+    .order("created_at", { ascending: false });
+
+  const promociones = (promosData as ProviderPromotion[] | null) ?? [];
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -67,6 +83,7 @@ export default async function ProveedorDetallePage({
   return (
     <>
       <Navbar />
+      <TrackView providerId={provider.id} />
       <main className="shell pt-28 pb-20">
         <Link
           href="/proveedores"
@@ -114,32 +131,42 @@ export default async function ProveedorDetallePage({
             </div>
 
             {/* Contacto para cotización */}
-            <div className="flex w-full shrink-0 flex-col gap-3 sm:w-64">
-              <a
-                href={`tel:${provider.phone}`}
-                className="rounded-xl border border-ink-700 bg-ink-900 px-4 py-3 text-center text-sm font-medium text-bone transition-colors hover:border-trail-500/50 hover:text-trail-400"
-              >
-                {provider.phone}
-              </a>
-              {provider.website && (
-                <a
-                  href={provider.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl border border-ink-700 bg-ink-900 px-4 py-3 text-center text-sm font-medium text-bone transition-colors hover:border-trail-500/50 hover:text-trail-400"
-                >
-                  Sitio web
-                </a>
-              )}
-              <a
-                href="#cotizar"
-                className="btn-primary text-center"
-              >
-                Solicitar cotización
-              </a>
-            </div>
+            <ContactoTracker
+              providerId={provider.id}
+              phone={provider.phone}
+              website={provider.website}
+            />
           </div>
         </section>
+
+        {/* Promociones vigentes */}
+        {promociones.length > 0 && (
+          <section className="mt-12">
+            <h2 className="h3 mb-6 text-bone">Promociones</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {promociones.map((p) => (
+                <li key={p.id} className="card-line p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-bone">{p.titulo}</p>
+                    {p.descuento && (
+                      <span className="rounded-full border border-trail-500/40 bg-trail-500/10 px-2 py-0.5 text-xs font-semibold text-trail-400">
+                        {p.descuento}
+                      </span>
+                    )}
+                  </div>
+                  {p.descripcion && (
+                    <p className="mt-1.5 text-sm text-mute">{p.descripcion}</p>
+                  )}
+                  {p.fecha_fin && (
+                    <p className="mt-1 text-xs text-mute/60">
+                      Vigente hasta {fmtFechaCorta(p.fecha_fin)}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Servicios */}
         {services.length > 0 && (

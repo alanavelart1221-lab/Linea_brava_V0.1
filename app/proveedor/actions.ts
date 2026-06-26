@@ -145,6 +145,83 @@ export async function setQuoteEstado(
   return { error: null };
 }
 
+export type PromocionState = { error: string | null; success?: boolean } | null;
+
+/** Alta de una promoción. La RLS exige ser el dueño del proveedor (o admin). */
+export async function addPromocion(
+  providerId: string,
+  _prev: PromocionState,
+  formData: FormData
+): Promise<PromocionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const titulo = (formData.get("titulo") as string)?.trim();
+  if (!titulo) return { error: "El título es obligatorio." };
+
+  const descripcion = (formData.get("descripcion") as string)?.trim() || null;
+  const descuento = (formData.get("descuento") as string)?.trim() || null;
+  const fechaInicio = (formData.get("fecha_inicio") as string)?.trim() || null;
+  const fechaFin = (formData.get("fecha_fin") as string)?.trim() || null;
+
+  if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+    return { error: "La fecha de fin no puede ser anterior a la de inicio." };
+  }
+
+  const { error } = await supabase.from("provider_promotions").insert({
+    provider_id: providerId,
+    titulo,
+    descripcion,
+    descuento,
+    fecha_inicio: fechaInicio,
+    fecha_fin: fechaFin,
+  });
+
+  if (error) return { error: "No se pudo guardar la promoción. Intenta de nuevo." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null, success: true };
+}
+
+/** Borra una promoción. La RLS exige ser el dueño (o admin). */
+export async function deletePromocion(
+  promoId: string,
+  providerId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("provider_promotions")
+    .delete()
+    .eq("id", promoId);
+  if (error) return { error: "No se pudo eliminar." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null };
+}
+
+/** Activa o desactiva una promoción. */
+export async function togglePromocion(
+  promoId: string,
+  providerId: string,
+  activo: boolean
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("provider_promotions")
+    .update({ activo })
+    .eq("id", promoId);
+  if (error) return { error: "No se pudo actualizar." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null };
+}
+
 export type PerfilState = { error: string | null; success?: boolean } | null;
 
 function parseList(raw: string | undefined, max: number): string[] {

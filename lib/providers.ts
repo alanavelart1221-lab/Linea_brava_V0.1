@@ -74,6 +74,19 @@ export interface ProviderService {
   created_at: string;
 }
 
+// Promoción / descuento del proveedor (tabla `provider_promotions`).
+export interface ProviderPromotion {
+  id: string;
+  provider_id: string;
+  titulo: string;
+  descripcion: string | null;
+  descuento: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  activo: boolean;
+  created_at: string;
+}
+
 // Estado de una solicitud de cotización.
 export type QuoteEstado = "nueva" | "atendida" | "descartada";
 

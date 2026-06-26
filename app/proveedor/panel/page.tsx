@@ -17,6 +17,7 @@ import {
   type ProviderEstado,
   type ProviderPayment,
   type ProviderProduct,
+  type ProviderPromotion,
   type ProviderRow,
   type ProviderService,
   type ProviderSubscription,
@@ -27,6 +28,9 @@ import { DeleteProductButton } from "./DeleteProductButton";
 import { ServicioForm } from "./ServicioForm";
 import { DeleteServiceButton } from "./DeleteServiceButton";
 import { QuoteEstadoControls } from "./QuoteEstadoControls";
+import { PromocionForm } from "./PromocionForm";
+import { DeletePromocionButton } from "./DeletePromocionButton";
+import { TogglePromocionButton } from "./TogglePromocionButton";
 import { PerfilForm } from "./PerfilForm";
 import { ReenviarButton } from "./ReenviarButton";
 import { ActivarSuscripcionButton } from "./ActivarSuscripcionButton";
@@ -187,14 +191,12 @@ export default async function ProveedorPanelPage({
 
             {seccion === "cotizaciones" && <CotizacionesSection providerId={provider.id} />}
 
+            {seccion === "promociones" && <PromocionesSection providerId={provider.id} />}
+
+            {seccion === "estadisticas" && <EstadisticasSection providerId={provider.id} />}
+
             {seccion === "proyectos" && (
               <Stub title="Proyectos" detalle="Pronto podrás mostrar tus proyectos y trabajos realizados." />
-            )}
-            {seccion === "promociones" && (
-              <Stub title="Promociones" detalle="Pronto podrás crear promociones y descuentos para los miembros." />
-            )}
-            {seccion === "estadisticas" && (
-              <Stub title="Estadísticas" detalle="Pronto verás visitas a tu perfil, contactos y rendimiento." />
             )}
           </div>
         </div>
@@ -445,6 +447,130 @@ async function CotizacionesSection({ providerId }: { providerId: string }) {
         </ul>
       )}
     </Section>
+  );
+}
+
+async function PromocionesSection({ providerId }: { providerId: string }) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("provider_promotions")
+    .select("id, provider_id, titulo, descripcion, descuento, fecha_inicio, fecha_fin, activo, created_at")
+    .eq("provider_id", providerId)
+    .order("created_at", { ascending: false });
+  const promos = (data as ProviderPromotion[] | null) ?? [];
+
+  return (
+    <Section title="Promociones">
+      <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
+        <div className="card-line h-fit p-6">
+          <h3 className="mb-5 font-display text-xl text-bone">Nueva promoción</h3>
+          <PromocionForm providerId={providerId} />
+        </div>
+        <div>
+          <h3 className="mb-5 font-display text-xl text-bone">
+            Mis promociones <span className="text-base font-normal text-mute">({promos.length})</span>
+          </h3>
+          {promos.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-ink-600 bg-ink-900/40 p-10 text-center">
+              <p className="text-mute">Aún no has creado promociones.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {promos.map((p) => (
+                <li key={p.id} className="card-line p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-bone">{p.titulo}</span>
+                        {p.descuento && (
+                          <span className="rounded-full border border-trail-500/40 bg-trail-500/10 px-2 py-0.5 text-xs font-semibold text-trail-400">
+                            {p.descuento}
+                          </span>
+                        )}
+                        <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${
+                          p.activo
+                            ? "border-go-500/40 bg-go-500/10 text-go-400"
+                            : "border-ink-500/50 bg-ink-700/40 text-mute"
+                        }`}>
+                          {p.activo ? "Activa" : "Inactiva"}
+                        </span>
+                      </div>
+                      {p.descripcion && (
+                        <p className="mt-1.5 text-sm text-mute">{p.descripcion}</p>
+                      )}
+                      {(p.fecha_inicio || p.fecha_fin) && (
+                        <p className="mt-1 text-xs text-mute/60">
+                          {p.fecha_inicio ? fmtFechaCorta(p.fecha_inicio) : "Sin inicio"} →{" "}
+                          {p.fecha_fin ? fmtFechaCorta(p.fecha_fin) : "Sin fin"}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <TogglePromocionButton promoId={p.id} providerId={providerId} activo={p.activo} />
+                      <DeletePromocionButton promoId={p.id} providerId={providerId} />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+async function EstadisticasSection({ providerId }: { providerId: string }) {
+  const supabase = await createClient();
+  const desde30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Conteos (cada uno por su cuenta para poder filtrar por tipo/fecha).
+  const [
+    vistasTotal,
+    vistas30,
+    contactosTotal,
+    contactos30,
+    cotizacionesTotal,
+    cotizaciones30,
+    productos,
+    servicios,
+    promosActivas,
+  ] = await Promise.all([
+    supabase.from("provider_events").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("tipo", "vista"),
+    supabase.from("provider_events").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("tipo", "vista").gte("created_at", desde30),
+    supabase.from("provider_events").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("tipo", "contacto"),
+    supabase.from("provider_events").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("tipo", "contacto").gte("created_at", desde30),
+    supabase.from("quote_requests").select("id", { count: "exact", head: true }).eq("provider_id", providerId),
+    supabase.from("quote_requests").select("id", { count: "exact", head: true }).eq("provider_id", providerId).gte("created_at", desde30),
+    supabase.from("provider_products").select("id", { count: "exact", head: true }).eq("provider_id", providerId),
+    supabase.from("provider_services").select("id", { count: "exact", head: true }).eq("provider_id", providerId),
+    supabase.from("provider_promotions").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("activo", true),
+  ]);
+
+  return (
+    <Section title="Estadísticas">
+      <p className="mb-6 text-sm text-mute">
+        Actividad de tu perfil. Las vistas y contactos no cuentan tus propias visitas.
+      </p>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Metrica label="Vistas de perfil" valor={vistasTotal.count ?? 0} sub={`${vistas30.count ?? 0} en 30 días`} />
+        <Metrica label="Contactos" valor={contactosTotal.count ?? 0} sub={`${contactos30.count ?? 0} en 30 días`} />
+        <Metrica label="Cotizaciones" valor={cotizacionesTotal.count ?? 0} sub={`${cotizaciones30.count ?? 0} en 30 días`} />
+        <Metrica label="Productos" valor={productos.count ?? 0} />
+        <Metrica label="Servicios" valor={servicios.count ?? 0} />
+        <Metrica label="Promociones activas" valor={promosActivas.count ?? 0} />
+      </div>
+    </Section>
+  );
+}
+
+function Metrica({ label, valor, sub }: { label: string; valor: number; sub?: string }) {
+  return (
+    <div className="card-line p-5">
+      <p className="text-xs uppercase tracking-widest text-mute">{label}</p>
+      <p className="mt-2 font-display text-4xl text-bone">{valor.toLocaleString("es-MX")}</p>
+      {sub && <p className="mt-1 text-xs text-trail-400">{sub}</p>}
+    </div>
   );
 }
 
