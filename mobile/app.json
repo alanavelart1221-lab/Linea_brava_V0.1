@@ -14,7 +14,9 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Línea Brava usa tu ubicación para grabar el trazo de tus rutas off-road.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Línea Brava graba tu recorrido en segundo plano para que puedas seguir la ruta con la pantalla apagada.",
-        "UIBackgroundModes": ["location"]
+        "UIBackgroundModes": [
+          "location"
+        ]
       }
     },
     "android": {
@@ -24,7 +26,12 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
         "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "FOREGROUND_SERVICE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "plugins": [
@@ -39,6 +46,13 @@
         }
       ],
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c31ee75b-c54e-4ad3-82e4-d0c429505dfe"
+      }
+    },
+    "owner": "avelartq1215"
   }
 }

@@ -1,0 +1,36 @@
+{
+  // Config de EAS Build. requireCommit:false permite construir el árbol de trabajo
+  // actual (incluye archivos sin commitear; respeta .gitignore, así que .env NO sube
+  // y por eso las llaves van abajo en "env").
+  "cli": {
+    "version": ">= 20.0.0",
+    "appVersionSource": "local",
+    "requireCommit": false
+  },
+  "build": {
+    // Perfil para PROBAR: genera un .apk instalable directo en el teléfono.
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://kxyjegopmakondiwztah.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4eWplZ29wbWFrb25kaXd6dGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzA3NjIsImV4cCI6MjA5NjkwNjc2Mn0.94_RKA9Umo5SgOCLtGLv6hHyVg-ELoDUyQykok5PaEg"
+      }
+    },
+    // Perfil para PUBLICAR en Play Store (genera .aab). Para después.
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://kxyjegopmakondiwztah.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4eWplZ29wbWFrb25kaXd6dGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzA3NjIsImV4cCI6MjA5NjkwNjc2Mn0.94_RKA9Umo5SgOCLtGLv6hHyVg-ELoDUyQykok5PaEg"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
