@@ -13,10 +13,18 @@ import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 
 export default function Login() {
-  const { signInWithPassword } = useAuth();
+  const { signInWithPassword, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [busyGoogle, setBusyGoogle] = useState(false);
+
+  async function handleGoogle() {
+    setBusyGoogle(true);
+    const error = await signInWithGoogle();
+    setBusyGoogle(false);
+    if (error) Alert.alert("No se pudo entrar con Google", error);
+  }
 
   async function handleSubmit() {
     const e = email.trim();
@@ -82,8 +90,22 @@ export default function Login() {
         <Text style={styles.btnPrimaryText}>{busy ? "Entrando…" : "Entrar"}</Text>
       </Pressable>
 
+      <View style={styles.separator}>
+        <View style={styles.separatorLine} />
+        <Text style={styles.separatorText}>o</Text>
+        <View style={styles.separatorLine} />
+      </View>
+
+      <Pressable
+        style={[styles.btnGoogle, busyGoogle && styles.btnDisabled]}
+        onPress={handleGoogle}
+        disabled={busyGoogle || busy}
+      >
+        <Text style={styles.btnGoogleText}>{busyGoogle ? "Abriendo…" : "Continuar con Google"}</Text>
+      </Pressable>
+
       <Text style={styles.hint}>
-        Si es tu primera vez, se crea tu cuenta automáticamente con este correo y contraseña.
+        Si es tu primera vez, se crea tu cuenta automáticamente.
       </Text>
     </KeyboardAvoidingView>
   );
@@ -110,4 +132,9 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: colors.ink950, fontSize: 16, fontWeight: "700" },
   btnDisabled: { opacity: 0.6 },
   hint: { color: colors.mute, fontSize: 13, marginTop: 16, lineHeight: 19, textAlign: "center" },
+  separator: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 20 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: colors.ink600 },
+  separatorText: { color: colors.mute, fontSize: 13 },
+  btnGoogle: { borderWidth: 1, borderColor: colors.ink600, backgroundColor: colors.ink800, paddingVertical: 16, borderRadius: 999, alignItems: "center" },
+  btnGoogleText: { color: colors.bone, fontSize: 16, fontWeight: "600" },
 });
