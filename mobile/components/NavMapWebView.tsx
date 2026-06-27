@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
 import { WebView } from "react-native-webview";
+import type { WebViewMessageEvent } from "react-native-webview";
 import { WAYPOINT_CATEGORIES, type Waypoint } from "@/lib/activities";
 import type { Point } from "@/lib/geo";
 import { LEAFLET_CSS, LEAFLET_JS } from "@/lib/leaflet-bundle";
+import { getTileBase64 } from "@/lib/tileCache";
 
 function emojiFor(category: string) {
   return WAYPOINT_CATEGORIES.find((c) => c.key === category)?.emoji ?? "📍";
@@ -48,6 +50,25 @@ export function NavMapWebView({
     [waypoints]
   );
 
+  // El mapa pide cada tile por postMessage; respondemos con el tile cacheado en
+  // disco (base64) o, si no está, con la URL de red (cae a online cuando hay señal).
+  async function onMessage(e: WebViewMessageEvent) {
+    try {
+      const msg = JSON.parse(e.nativeEvent.data);
+      if (msg.type !== "getTile") return;
+      const { z, x, y, id } = msg;
+      const b64 = await getTileBase64(z, x, y);
+      const src = b64
+        ? `data:image/png;base64,${b64}`
+        : `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`;
+      ref.current?.injectJavaScript(
+        `window._tileReady(${JSON.stringify(id)}, ${JSON.stringify(src)}); true;`
+      );
+    } catch {
+      // ignora errores de parseo
+    }
+  }
+
   const html = useMemo(
     () => `<!DOCTYPE html>
 <html>
@@ -66,11 +87,27 @@ export function NavMapWebView({
   var dotColor = ${JSON.stringify(dotColor)};
   var startPoint = ${JSON.stringify(startPoint ?? null)};
   var endPoint = ${JSON.stringify(endPoint ?? null)};
+
+  // Capa de tiles offline: cada tile se pide a React Native (caché en disco) y,
+  // si no está, cae a la red. Así el fondo del mapa se ve sin internet.
+  var _pending = {};
+  window._tileReady = function(id, src) {
+    var cb = _pending[id];
+    if (cb) { cb(src); delete _pending[id]; }
+  };
+  var OfflineTileLayer = L.TileLayer.extend({
+    createTile: function(coords, done) {
+      var img = document.createElement('img');
+      img.setAttribute('role', 'presentation');
+      var id = coords.z + '_' + coords.x + '_' + coords.y + '_' + Date.now();
+      _pending[id] = function(src) { img.src = src; done(null, img); };
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'getTile', z: coords.z, x: coords.x, y: coords.y, id: id }));
+      return img;
+    }
+  });
+
   var map = L.map('map', { attributionControl: true }).setView([${center[0]}, ${center[1]}], 14);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd', maxZoom: 20,
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
-  }).addTo(map);
+  new OfflineTileLayer('', { maxZoom: 20, attribution: '© OpenStreetMap © CARTO' }).addTo(map);
 
   if (routeTrack.length > 1) {
     var rline = L.polyline(routeTrack, { color: '#F59E0B', weight: 4, opacity: 0.9 }).addTo(map);
@@ -166,6 +203,7 @@ export function NavMapWebView({
       originWhitelist={["*"]}
       source={{ html }}
       style={height ? { height, backgroundColor: "#0C0D0F" } : { flex: 1, backgroundColor: "#0C0D0F" }}
+      onMessage={onMessage}
       onLoadEnd={() => {
         ready.current = true;
         pushLive();

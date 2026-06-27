@@ -19,6 +19,7 @@ import { fetchReviews, saveReview, deleteReview, reviewStats, type RouteReview }
 import type { Point } from "@/lib/geo";
 import type { Waypoint } from "@/lib/activities";
 import { saveRouteOffline, removeOfflineRoute, isRouteOffline } from "@/lib/offline";
+import { cacheTilesForTrack } from "@/lib/tileCache";
 
 type RouteRow = {
   id: string;
@@ -45,6 +46,7 @@ export default function RutaDetalle() {
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const [dlPct, setDlPct] = useState<number | null>(null); // null = no descargando
 
   const myReview = session ? reviews.find((r) => r.user_id === session.user.id) ?? null : null;
 
@@ -75,6 +77,7 @@ export default function RutaDetalle() {
       setDownloaded(false);
       return;
     }
+    setDlPct(0);
     await saveRouteOffline({
       id: route.id,
       name: route.name,
@@ -86,8 +89,18 @@ export default function RutaDetalle() {
       level: route.level,
       distance_km: route.distance_km,
     });
+    // Cachea los tiles del mapa del área de la ruta para verla con fondo offline.
+    if (route.track && route.track.length > 1) {
+      await cacheTilesForTrack(route.track, (done, total) =>
+        setDlPct(total ? Math.round((done / total) * 100) : 100)
+      );
+    }
+    setDlPct(null);
     setDownloaded(true);
-    Alert.alert("Descargada", "Ya puedes hacer esta ruta sin internet desde Perfil → Rutas descargadas.");
+    Alert.alert(
+      "Descargada",
+      "Ruta y mapa guardados. Ya puedes hacerla sin internet desde Perfil → Rutas descargadas."
+    );
   }
 
   useEffect(() => {
@@ -165,9 +178,17 @@ export default function RutaDetalle() {
           >
             <Text style={styles.hacerBtnText}>▶ Hacer ruta</Text>
           </Pressable>
-          <Pressable style={styles.descargaBtn} onPress={toggleDescarga}>
+          <Pressable
+            style={styles.descargaBtn}
+            onPress={toggleDescarga}
+            disabled={dlPct !== null}
+          >
             <Text style={styles.descargaBtnText}>
-              {downloaded ? "✓ Descargada — quitar" : "⤓ Descargar para usar sin internet"}
+              {dlPct !== null
+                ? `Descargando mapa… ${dlPct}%`
+                : downloaded
+                ? "✓ Descargada — quitar"
+                : "⤓ Descargar para usar sin internet"}
             </Text>
           </Pressable>
         </>

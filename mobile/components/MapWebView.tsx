@@ -1,7 +1,10 @@
+import { useRef } from "react";
 import { WebView } from "react-native-webview";
+import type { WebViewMessageEvent } from "react-native-webview";
 import { WAYPOINT_CATEGORIES, type Waypoint } from "@/lib/activities";
 import type { Point } from "@/lib/geo";
 import { LEAFLET_CSS, LEAFLET_JS } from "@/lib/leaflet-bundle";
+import { getTileBase64 } from "@/lib/tileCache";
 
 function emojiFor(category: string) {
   return WAYPOINT_CATEGORIES.find((c) => c.key === category)?.emoji ?? "📍";
@@ -16,8 +19,28 @@ export function MapWebView({
   waypoints?: Waypoint[];
   height?: number;
 }) {
+  const ref = useRef<WebView>(null);
   const center = track[0] ?? [23.6, -102.5]; // centro de México por defecto
   const wps = waypoints.map((w) => ({ ...w, emoji: emojiFor(w.category) }));
+
+  // Tiles offline: el mapa pide cada tile a RN; respondemos con el cacheado en
+  // disco (base64) o, si no está, con la URL de red.
+  async function onMessage(e: WebViewMessageEvent) {
+    try {
+      const msg = JSON.parse(e.nativeEvent.data);
+      if (msg.type !== "getTile") return;
+      const { z, x, y, id } = msg;
+      const b64 = await getTileBase64(z, x, y);
+      const src = b64
+        ? `data:image/png;base64,${b64}`
+        : `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`;
+      ref.current?.injectJavaScript(
+        `window._tileReady(${JSON.stringify(id)}, ${JSON.stringify(src)}); true;`
+      );
+    } catch {
+      // ignora errores de parseo
+    }
+  }
 
   const html = `<!DOCTYPE html>
 <html>
@@ -32,11 +55,25 @@ export function MapWebView({
 <script>
   var track = ${JSON.stringify(track)};
   var wps = ${JSON.stringify(wps)};
+
+  var _pending = {};
+  window._tileReady = function(id, src) {
+    var cb = _pending[id];
+    if (cb) { cb(src); delete _pending[id]; }
+  };
+  var OfflineTileLayer = L.TileLayer.extend({
+    createTile: function(coords, done) {
+      var img = document.createElement('img');
+      img.setAttribute('role', 'presentation');
+      var id = coords.z + '_' + coords.x + '_' + coords.y + '_' + Date.now();
+      _pending[id] = function(src) { img.src = src; done(null, img); };
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'getTile', z: coords.z, x: coords.x, y: coords.y, id: id }));
+      return img;
+    }
+  });
+
   var map = L.map('map', { scrollWheelZoom: false, attributionControl: true }).setView([${center[0]}, ${center[1]}], 13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd', maxZoom: 20,
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
-  }).addTo(map);
+  new OfflineTileLayer('', { maxZoom: 20, attribution: '© OpenStreetMap © CARTO' }).addTo(map);
   if (track.length > 1) {
     var line = L.polyline(track, { color: '#F59E0B', weight: 4, opacity: 0.9 }).addTo(map);
     map.fitBounds(line.getBounds(), { padding: [30, 30] });
@@ -55,10 +92,12 @@ export function MapWebView({
 
   return (
     <WebView
+      ref={ref}
       originWhitelist={["*"]}
       source={{ html }}
       style={{ height, backgroundColor: "#0C0D0F" }}
       scrollEnabled={false}
+      onMessage={onMessage}
     />
   );
 }
