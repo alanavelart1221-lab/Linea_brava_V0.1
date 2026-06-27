@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ProviderCard } from "@/components/ProviderCard";
-import { TYPE_META } from "@/lib/providers";
+import { TYPE_META, PRECIO_SUSCRIPCION_MXN } from "@/lib/providers";
 import type { Provider, ProviderType } from "@/lib/providers";
 import Link from "next/link";
 
@@ -154,67 +154,42 @@ function ProveedoresInner({ providers }: { providers: Provider[] }) {
             </div>
           )}
 
-          {/* Plans section */}
+          {/* Plan section */}
           <section id="planes" className="mt-24">
             <div className="mb-12 text-center">
               <span className="eyebrow mb-4 flex items-center justify-center gap-2">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-trail-500" />
                 Para negocios
               </span>
-              <h2 className="h2 text-bone">Planes de visibilidad</h2>
+              <h2 className="h2 text-bone">Suscripción de proveedor</h2>
               <p className="mx-auto mt-4 max-w-xl text-mute">
                 Conecta tu negocio con la comunidad off-road más activa de México.
+                Un solo plan, sin letras chiquitas.
               </p>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-3">
+            <div className="mx-auto max-w-md">
               <PlanCard
-                name="Básico"
-                price="$599"
-                period="mes"
-                features={[
-                  "Perfil en el directorio",
-                  "Foto y descripción",
-                  "Botón de contacto directo",
-                  "Hasta 3 especialidades",
-                ]}
-              />
-              <PlanCard
-                name="Pro"
-                price="$1,499"
+                name="Plan proveedor"
+                price={`$${PRECIO_SUSCRIPCION_MXN}`}
                 period="mes"
                 featured
+                badge="60 días gratis"
                 features={[
-                  "Todo lo del plan Básico",
-                  "Posicionamiento prioritario",
-                  "Etiqueta «Destacado»",
-                  "Recepción de prospectos",
-                  "Solicitudes de cotización",
-                  "Publicaciones en el feed",
-                ]}
-              />
-              <PlanCard
-                name="Elite"
-                price="$2,999"
-                period="mes"
-                features={[
-                  "Todo lo del plan Pro",
-                  "Banner en rutas relevantes",
-                  "Publicaciones patrocinadas",
-                  "Estadísticas de prospectos",
-                  "Soporte prioritario",
+                  "Perfil completo en el directorio",
+                  "Logo, fotos y galería del negocio",
+                  "Productos, servicios y marcas",
+                  "Botón de contacto y cotización directa",
+                  "Posicionamiento en búsquedas por estado y tipo",
+                  "Panel para administrar tu negocio",
                 ]}
               />
             </div>
 
-            <p className="mt-8 text-center text-sm text-mute">
-              ¿Dudas o plan personalizado?{" "}
-              <a
-                href="mailto:proveedores@lineabrava.mx"
-                className="font-semibold text-trail-400 hover:text-trail-300"
-              >
-                Escríbenos
-              </a>
+            <p className="mx-auto mt-8 max-w-md text-center text-sm text-mute">
+              Regístrate gratis y, al ser aprobado, activamos{" "}
+              <span className="text-bone">60 días de prueba sin costo</span>. Después,
+              la suscripción es de ${PRECIO_SUSCRIPCION_MXN} MXN/mes.
             </p>
           </section>
         </div>
@@ -230,12 +205,14 @@ function PlanCard({
   period,
   features,
   featured = false,
+  badge,
 }: {
   name: string;
   price: string;
   period: string;
   features: string[];
   featured?: boolean;
+  badge?: string;
 }) {
   return (
     <div
@@ -245,9 +222,9 @@ function PlanCard({
           : "border-ink-700 bg-ink-900"
       }`}
     >
-      {featured && (
+      {badge && (
         <span className="mb-4 self-start rounded-full border border-trail-500/40 bg-trail-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-trail-400">
-          Más popular
+          {badge}
         </span>
       )}
       <h3 className="font-display text-2xl text-bone">{name}</h3>
@@ -277,16 +254,16 @@ function PlanCard({
         ))}
       </ul>
 
-      <a
-        href="mailto:proveedores@lineabrava.mx"
+      <Link
+        href="/proveedores/registro"
         className={`mt-auto block rounded-full py-3 text-center text-sm font-semibold transition-colors ${
           featured
             ? "bg-trail-500 text-ink-950 hover:bg-trail-400"
             : "border border-ink-600 text-bone hover:border-ink-400"
         }`}
       >
-        Solicitar este plan
-      </a>
+        Solicitar registro
+      </Link>
     </div>
   );
 }

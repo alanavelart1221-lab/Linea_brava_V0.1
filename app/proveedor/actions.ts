@@ -72,6 +72,261 @@ export async function addProduct(
   return { error: null, success: true };
 }
 
+export type ServiceState = { error: string | null; success?: boolean } | null;
+
+/** Alta de un servicio. La RLS exige ser el dueño del proveedor (o admin). */
+export async function addService(
+  providerId: string,
+  _prev: ServiceState,
+  formData: FormData
+): Promise<ServiceState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const name = (formData.get("name") as string)?.trim();
+  if (!name) return { error: "El nombre del servicio es obligatorio." };
+
+  const description = (formData.get("description") as string)?.trim() || null;
+
+  const priceRaw = (formData.get("price") as string)?.trim();
+  let price: number | null = null;
+  if (priceRaw) {
+    price = Number(priceRaw);
+    if (Number.isNaN(price) || price < 0) return { error: "Precio inválido." };
+  }
+
+  const { error } = await supabase.from("provider_services").insert({
+    provider_id: providerId,
+    name,
+    description,
+    price,
+  });
+
+  if (error) return { error: "No se pudo guardar el servicio. Intenta de nuevo." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null, success: true };
+}
+
+/** Borra un servicio. La RLS exige ser el dueño (o admin). */
+export async function deleteService(
+  serviceId: string,
+  providerId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("provider_services")
+    .delete()
+    .eq("id", serviceId);
+  if (error) return { error: "No se pudo eliminar." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null };
+}
+
+/** El proveedor cambia el estado de una cotización recibida. */
+export async function setQuoteEstado(
+  quoteId: string,
+  estado: "nueva" | "atendida" | "descartada"
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("quote_requests")
+    .update({ estado })
+    .eq("id", quoteId);
+  if (error) return { error: "No se pudo actualizar." };
+
+  revalidatePath("/proveedor/panel");
+  return { error: null };
+}
+
+export type PromocionState = { error: string | null; success?: boolean } | null;
+
+/** Alta de una promoción. La RLS exige ser el dueño del proveedor (o admin). */
+export async function addPromocion(
+  providerId: string,
+  _prev: PromocionState,
+  formData: FormData
+): Promise<PromocionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const titulo = (formData.get("titulo") as string)?.trim();
+  if (!titulo) return { error: "El título es obligatorio." };
+
+  const descripcion = (formData.get("descripcion") as string)?.trim() || null;
+  const descuento = (formData.get("descuento") as string)?.trim() || null;
+  const fechaInicio = (formData.get("fecha_inicio") as string)?.trim() || null;
+  const fechaFin = (formData.get("fecha_fin") as string)?.trim() || null;
+
+  if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+    return { error: "La fecha de fin no puede ser anterior a la de inicio." };
+  }
+
+  const { error } = await supabase.from("provider_promotions").insert({
+    provider_id: providerId,
+    titulo,
+    descripcion,
+    descuento,
+    fecha_inicio: fechaInicio,
+    fecha_fin: fechaFin,
+  });
+
+  if (error) return { error: "No se pudo guardar la promoción. Intenta de nuevo." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null, success: true };
+}
+
+/** Borra una promoción. La RLS exige ser el dueño (o admin). */
+export async function deletePromocion(
+  promoId: string,
+  providerId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("provider_promotions")
+    .delete()
+    .eq("id", promoId);
+  if (error) return { error: "No se pudo eliminar." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null };
+}
+
+/** Activa o desactiva una promoción. */
+export async function togglePromocion(
+  promoId: string,
+  providerId: string,
+  activo: boolean
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("provider_promotions")
+    .update({ activo })
+    .eq("id", promoId);
+  if (error) return { error: "No se pudo actualizar." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null };
+}
+
+export type PerfilState = { error: string | null; success?: boolean } | null;
+
+function parseList(raw: string | undefined, max: number): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, max);
+}
+
+/**
+ * Actualiza el perfil del propio proveedor (campos no privilegiados).
+ * La RLS `providers_update_own` y el trigger `protect_provider_fields` impiden
+ * tocar estado / featured / fechas de prueba.
+ */
+export async function actualizarPerfil(
+  providerId: string,
+  _prev: PerfilState,
+  formData: FormData
+): Promise<PerfilState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const name = (formData.get("name") as string)?.trim();
+  const state = (formData.get("state") as string)?.trim();
+  const city = (formData.get("city") as string)?.trim();
+  const description = (formData.get("description") as string)?.trim();
+  const phone = (formData.get("phone") as string)?.trim();
+  if (!name || !state || !city || !description || !phone) {
+    return { error: "Completa todos los campos obligatorios." };
+  }
+
+  const social = {
+    facebook: (formData.get("facebook") as string)?.trim() || undefined,
+    instagram: (formData.get("instagram") as string)?.trim() || undefined,
+    tiktok: (formData.get("tiktok") as string)?.trim() || undefined,
+    youtube: (formData.get("youtube") as string)?.trim() || undefined,
+  };
+
+  const logoFile = formData.get("logo") as File | null;
+  const newLogoUrl =
+    logoFile && logoFile.size > 0
+      ? await uploadProductImage(supabase, user.id, logoFile)
+      : null;
+
+  const update: Record<string, unknown> = {
+    name,
+    state,
+    city,
+    description,
+    phone,
+    email: (formData.get("email") as string)?.trim() || null,
+    whatsapp: (formData.get("whatsapp") as string)?.trim() || null,
+    address: (formData.get("address") as string)?.trim() || null,
+    website: (formData.get("website") as string)?.trim() || null,
+    specialty: parseList(formData.get("specialty") as string, 8),
+    servicios: parseList(formData.get("servicios") as string, 12),
+    marcas: parseList(formData.get("marcas") as string, 20),
+    social,
+  };
+  if (newLogoUrl) update.logo_url = newLogoUrl;
+
+  const { error } = await supabase
+    .from("providers")
+    .update(update)
+    .eq("id", providerId);
+
+  if (error) return { error: "No se pudo guardar. Intenta de nuevo." };
+
+  revalidatePath("/proveedor/panel");
+  revalidatePath(`/proveedores/${providerId}`);
+  return { error: null, success: true };
+}
+
+/**
+ * Reenvía la solicitud a revisión (borrador / info_pendiente -> pendiente).
+ * El trigger permite esta transición al dueño; vuelve a avisar a los admins.
+ */
+export async function reenviarSolicitud(
+  providerId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const { error } = await supabase
+    .from("providers")
+    .update({ estado: "pendiente" })
+    .eq("id", providerId);
+
+  if (error) return { error: "No se pudo reenviar la solicitud." };
+
+  // El aviso a los administradores lo dispara el trigger en `providers` al
+  // volver el estado a 'pendiente'.
+
+  revalidatePath("/proveedor/panel");
+  return { error: null };
+}
+
 /** Borra un producto de la tienda. La RLS exige ser el dueño (o admin). */
 export async function deleteProduct(
   productId: string,
