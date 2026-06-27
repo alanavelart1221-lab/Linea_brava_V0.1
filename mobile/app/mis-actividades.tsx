@@ -17,7 +17,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { crearRutaDesdeActividad, type Waypoint, type Nivel } from "@/lib/activities";
-import type { Point } from "@/lib/geo";
+import { trackDistanceKm, type Point } from "@/lib/geo";
+import { getPendingActivities } from "@/lib/offline";
 
 type Activity = {
   id: string;
@@ -27,6 +28,7 @@ type Activity = {
   distance_km: number | null;
   created_at: string;
   route_id: string | null;
+  pending?: boolean;
 };
 
 const NIVELES: Nivel[] = ["Verde", "Azul", "Negro", "Pro"];
@@ -47,12 +49,24 @@ export default function MisActividades() {
 
   const load = useCallback(async () => {
     if (!session) return;
+    // Pendientes guardadas en el teléfono (aún sin subir): se muestran arriba.
+    const pending = await getPendingActivities();
+    const pendingRows: Activity[] = pending.map((p) => ({
+      id: p.localId,
+      title: p.title,
+      track: p.track,
+      waypoints: p.waypoints,
+      distance_km: parseFloat(trackDistanceKm(p.track).toFixed(2)),
+      created_at: p.startedAt,
+      route_id: null,
+      pending: true,
+    }));
     const { data } = await supabase
       .from("user_activities")
       .select("id, title, track, waypoints, distance_km, created_at, route_id")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false });
-    setActivities((data as Activity[] | null) ?? []);
+    setActivities([...pendingRows, ...((data as Activity[] | null) ?? [])]);
     setLoading(false);
   }, [session]);
 
@@ -124,13 +138,15 @@ export default function MisActividades() {
                   {(item.waypoints?.length ?? 0)} waypoints
                 </Text>
               </View>
-              {item.route_id ? (
+              {item.pending ? (
+                <Text style={styles.tagPend}>Pendiente de subir</Text>
+              ) : item.route_id ? (
                 <Text style={styles.tagRuta}>Es ruta</Text>
               ) : (
                 <Text style={styles.tagPriv}>Privada</Text>
               )}
             </View>
-            {!item.route_id && (
+            {!item.route_id && !item.pending && (
               <Pressable style={styles.btnSmall} onPress={() => openCrearRuta(item)}>
                 <Text style={styles.btnSmallText}>Crear ruta</Text>
               </Pressable>
@@ -178,6 +194,7 @@ const styles = StyleSheet.create({
   meta: { color: colors.mute, fontSize: 13, marginTop: 4 },
   tagRuta: { color: colors.go400, fontSize: 12, fontWeight: "700" },
   tagPriv: { color: colors.mute, fontSize: 12, fontWeight: "700" },
+  tagPend: { color: colors.trail400, fontSize: 12, fontWeight: "700" },
   btnSmall: { borderWidth: 1, borderColor: colors.trail500, backgroundColor: "rgba(245,158,11,0.12)", borderRadius: 999, paddingVertical: 10, alignItems: "center" },
   btnSmallText: { color: colors.trail400, fontWeight: "700" },
   modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },

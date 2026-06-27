@@ -1,6 +1,7 @@
 import { WebView } from "react-native-webview";
 import { WAYPOINT_CATEGORIES, type Waypoint } from "@/lib/activities";
 import type { Point } from "@/lib/geo";
+import { LEAFLET_CSS, LEAFLET_JS } from "@/lib/leaflet-bundle";
 
 function emojiFor(category: string) {
   return WAYPOINT_CATEGORIES.find((c) => c.key === category)?.emoji ?? "📍";
@@ -22,8 +23,8 @@ export function MapWebView({
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>${LEAFLET_CSS}</style>
+<script>${LEAFLET_JS}</script>
 <style>html,body,#map{height:100%;margin:0;background:#0C0D0F;}</style>
 </head>
 <body>

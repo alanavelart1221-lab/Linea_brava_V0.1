@@ -18,6 +18,7 @@ import { StarRating } from "@/components/StarRating";
 import { fetchReviews, saveReview, deleteReview, reviewStats, type RouteReview } from "@/lib/reviews";
 import type { Point } from "@/lib/geo";
 import type { Waypoint } from "@/lib/activities";
+import { saveRouteOffline, removeOfflineRoute, isRouteOffline } from "@/lib/offline";
 
 type RouteRow = {
   id: string;
@@ -43,6 +44,7 @@ export default function RutaDetalle() {
   const [rating, setRating] = useState(0);
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
 
   const myReview = session ? reviews.find((r) => r.user_id === session.user.id) ?? null : null;
 
@@ -60,10 +62,33 @@ export default function RutaDetalle() {
         .eq("id", id)
         .single<RouteRow>();
       setRoute(data ?? null);
+      setDownloaded(await isRouteOffline(id));
       await loadReviews();
       setLoading(false);
     })();
   }, [id, loadReviews]);
+
+  async function toggleDescarga() {
+    if (!route || !id) return;
+    if (downloaded) {
+      await removeOfflineRoute(id);
+      setDownloaded(false);
+      return;
+    }
+    await saveRouteOffline({
+      id: route.id,
+      name: route.name,
+      track: route.track,
+      waypoints: route.waypoints,
+      description: route.description,
+      state: route.state,
+      region: route.region,
+      level: route.level,
+      distance_km: route.distance_km,
+    });
+    setDownloaded(true);
+    Alert.alert("Descargada", "Ya puedes hacer esta ruta sin internet desde Perfil → Rutas descargadas.");
+  }
 
   useEffect(() => {
     if (myReview) {
@@ -133,12 +158,19 @@ export default function RutaDetalle() {
       </View>
 
       {(route.track?.length ?? 0) > 1 && (
-        <Pressable
-          style={styles.hacerBtn}
-          onPress={() => router.push(session ? `/hacer-ruta/${id}` : "/login")}
-        >
-          <Text style={styles.hacerBtnText}>▶ Hacer ruta</Text>
-        </Pressable>
+        <>
+          <Pressable
+            style={styles.hacerBtn}
+            onPress={() => router.push(session ? `/hacer-ruta/${id}` : "/login")}
+          >
+            <Text style={styles.hacerBtnText}>▶ Hacer ruta</Text>
+          </Pressable>
+          <Pressable style={styles.descargaBtn} onPress={toggleDescarga}>
+            <Text style={styles.descargaBtnText}>
+              {downloaded ? "✓ Descargada — quitar" : "⤓ Descargar para usar sin internet"}
+            </Text>
+          </Pressable>
+        </>
       )}
 
       {route.description ? <Text style={styles.desc}>{route.description}</Text> : null}
@@ -203,6 +235,8 @@ const styles = StyleSheet.create({
   badge: { color: colors.trail300, fontSize: 13, fontWeight: "800", marginTop: 8 },
   hacerBtn: { backgroundColor: colors.trail500, paddingVertical: 15, borderRadius: 999, alignItems: "center" },
   hacerBtnText: { color: colors.ink950, fontSize: 16, fontWeight: "700" },
+  descargaBtn: { borderWidth: 1, borderColor: colors.ink600, paddingVertical: 13, borderRadius: 999, alignItems: "center" },
+  descargaBtnText: { color: colors.bone, fontSize: 14, fontWeight: "600" },
   desc: { color: colors.mute, fontSize: 15, lineHeight: 22 },
   divider: { height: 1, backgroundColor: colors.ink700 },
   section: { color: colors.bone, fontSize: 20, fontWeight: "800" },

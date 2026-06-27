@@ -32,7 +32,7 @@ export const WAYPOINT_CATEGORIES: {
 
 export type Nivel = "Verde" | "Azul" | "Negro" | "Pro";
 
-type GuardarActividadInput = {
+export type GuardarActividadInput = {
   userId: string;
   title: string | null;
   track: Point[];

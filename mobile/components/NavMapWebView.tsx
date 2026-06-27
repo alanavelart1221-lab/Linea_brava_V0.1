@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { WebView } from "react-native-webview";
 import { WAYPOINT_CATEGORIES, type Waypoint } from "@/lib/activities";
 import type { Point } from "@/lib/geo";
+import { LEAFLET_CSS, LEAFLET_JS } from "@/lib/leaflet-bundle";
 
 function emojiFor(category: string) {
   return WAYPOINT_CATEGORIES.find((c) => c.key === category)?.emoji ?? "📍";
@@ -21,6 +22,9 @@ export function NavMapWebView({
   height,
   userColor = "#10B981",
   markerColor,
+  startPoint,
+  endPoint,
+  guideTo,
 }: {
   routeTrack: Point[];
   waypoints?: Waypoint[];
@@ -29,6 +33,9 @@ export function NavMapWebView({
   height?: number;
   userColor?: string;
   markerColor?: string;
+  startPoint?: Point | null;
+  endPoint?: Point | null;
+  guideTo?: Point | null;
 }) {
   // El marcador de posición usa su propio color; por defecto, el del trazo.
   const dotColor = markerColor ?? userColor;
@@ -46,8 +53,8 @@ export function NavMapWebView({
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>${LEAFLET_CSS}</style>
+<script>${LEAFLET_JS}</script>
 <style>html,body,#map{height:100%;margin:0;background:#0C0D0F;}</style>
 </head>
 <body>
@@ -57,6 +64,8 @@ export function NavMapWebView({
   var wps = ${JSON.stringify(wps)};
   var userColor = ${JSON.stringify(userColor)};
   var dotColor = ${JSON.stringify(dotColor)};
+  var startPoint = ${JSON.stringify(startPoint ?? null)};
+  var endPoint = ${JSON.stringify(endPoint ?? null)};
   var map = L.map('map', { attributionControl: true }).setView([${center[0]}, ${center[1]}], 14);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd', maxZoom: 20,
@@ -77,10 +86,31 @@ export function NavMapWebView({
     L.marker([w.lat, w.lng], { icon: icon }).addTo(map).bindPopup('<b>' + (w.name || '') + '</b>');
   });
 
+  if (startPoint) {
+    var startIcon = L.divIcon({
+      className: '',
+      html: '<span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:#10B981;border:3px solid #0B0C0E;color:#0B0C0E;font-size:13px;font-weight:800;">▶</span>',
+      iconSize: [30, 30], iconAnchor: [15, 15]
+    });
+    L.marker(startPoint, { icon: startIcon }).addTo(map).bindPopup('<b>Inicio</b>');
+  }
+  if (endPoint) {
+    var endIcon = L.divIcon({
+      className: '',
+      html: '<span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:#1A1D21;border:2px solid #F59E0B;font-size:15px;">🏁</span>',
+      iconSize: [30, 30], iconAnchor: [15, 15]
+    });
+    L.marker(endPoint, { icon: endIcon }).addTo(map).bindPopup('<b>Fin</b>');
+  }
+
   var userLine = L.polyline([], { color: userColor, weight: 5, opacity: 0.95 }).addTo(map);
+  var guideLine = L.polyline([], { color: '#F59E0B', weight: 3, opacity: 0.8, dashArray: '8, 10' }).addTo(map);
   var posMarker = null;
 
   window.setUser = function (t) { userLine.setLatLngs(t); };
+  window.setGuide = function (from, to) {
+    guideLine.setLatLngs(from && to ? [from, to] : []);
+  };
   window.setPosition = function (lat, lng) {
     var ll = [lat, lng];
     if (!posMarker) {
@@ -98,17 +128,29 @@ export function NavMapWebView({
 </script>
 </body>
 </html>`,
-    // El HTML solo depende de la ruta a seguir y el color del usuario; el resto
-    // se inyecta en vivo.
+    // El HTML solo depende de la ruta a seguir, los marcadores fijos y el color
+    // del usuario; el trazo, la posición y la línea guía se inyectan en vivo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(routeTrack), JSON.stringify(wps), userColor, dotColor]
+    [
+      JSON.stringify(routeTrack),
+      JSON.stringify(wps),
+      userColor,
+      dotColor,
+      JSON.stringify(startPoint ?? null),
+      JSON.stringify(endPoint ?? null),
+    ]
   );
 
   function pushLive() {
     if (!ready.current) return;
+    const guide =
+      guideTo && position
+        ? `if(window.setGuide){window.setGuide(${JSON.stringify(position)},${JSON.stringify(guideTo)});}`
+        : `if(window.setGuide){window.setGuide(null,null);}`;
     ref.current?.injectJavaScript(
       `if(window.setUser){window.setUser(${JSON.stringify(userTrack)});}` +
         (position ? `if(window.setPosition){window.setPosition(${position[0]},${position[1]});}` : "") +
+        guide +
         `true;`
     );
   }
@@ -116,7 +158,7 @@ export function NavMapWebView({
   useEffect(() => {
     pushLive();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userTrack, position]);
+  }, [userTrack, position, guideTo]);
 
   return (
     <WebView

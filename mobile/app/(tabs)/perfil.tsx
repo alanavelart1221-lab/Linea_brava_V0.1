@@ -29,6 +29,10 @@ export default function Perfil() {
         <Text style={styles.rowText}>Mis rutas</Text>
         <Text style={styles.chev}>›</Text>
       </Pressable>
+      <Pressable style={styles.row} onPress={() => router.push("/descargadas")}>
+        <Text style={styles.rowText}>Rutas descargadas</Text>
+        <Text style={styles.chev}>›</Text>
+      </Pressable>
 
       <Pressable style={styles.signout} onPress={signOut}>
         <Text style={styles.signoutText}>Salir</Text>

@@ -96,6 +96,30 @@ export async function startTracking(): Promise<string | null> {
   return null;
 }
 
+/**
+ * Watcher de primer plano para la fase de aproximación (ir hacia el inicio de la
+ * ruta), separado de la grabación. NO escribe en el `track` de módulo ni notifica
+ * a los listeners de grabación: solo reporta la posición en vivo al callback.
+ * Devuelve un objeto con `remove()` o un mensaje de error si no hay permiso.
+ */
+export async function watchApproach(
+  cb: (p: Point) => void
+): Promise<{ remove: () => void } | string> {
+  const fg = await Location.requestForegroundPermissionsAsync();
+  if (fg.status !== "granted") {
+    return "Necesitamos tu ubicación para guiarte al inicio de la ruta.";
+  }
+  const sub = await Location.watchPositionAsync(
+    {
+      accuracy: Location.Accuracy.BestForNavigation,
+      timeInterval: 2000,
+      distanceInterval: 5,
+    },
+    (loc) => cb([loc.coords.latitude, loc.coords.longitude])
+  );
+  return { remove: () => sub.remove() };
+}
+
 /** Detiene la grabación y devuelve el track final acumulado. */
 export async function stopTracking(): Promise<Point[]> {
   const started = await Location.hasStartedLocationUpdatesAsync(TRACK_TASK).catch(() => false);
