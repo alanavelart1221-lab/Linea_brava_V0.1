@@ -3,138 +3,181 @@ import {
   View,
   Text,
   Pressable,
-  TextInput,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Linking,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 
+// Páginas legales en la web. Placeholder: la web aún no tiene estas rutas;
+// actualiza el dominio/ruta cuando existan.
+const LEGAL = {
+  terminos: "https://lineabrava.mx/terminos",
+  privacidad: "https://lineabrava.mx/privacidad",
+};
+
 export default function Login() {
-  const { signInWithPassword, signInWithGoogle } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [busyGoogle, setBusyGoogle] = useState(false);
+  const { signInWithGoogle, signInWithApple } = useAuth();
+  const [busy, setBusy] = useState<null | "google" | "apple">(null);
 
   async function handleGoogle() {
-    setBusyGoogle(true);
+    setBusy("google");
     const error = await signInWithGoogle();
-    setBusyGoogle(false);
+    setBusy(null);
+    // Si todo sale bien, el guard de sesión navega solo a las pestañas.
     if (error) Alert.alert("No se pudo entrar con Google", error);
   }
 
-  async function handleSubmit() {
-    const e = email.trim();
-    if (!e.includes("@") || !e.includes(".")) {
-      Alert.alert("Correo inválido", "Escribe un correo válido.");
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert("Contraseña muy corta", "Usa al menos 6 caracteres.");
-      return;
-    }
-    setBusy(true);
-    const error = await signInWithPassword(e, password);
-    setBusy(false);
-    // Si todo sale bien, el guard de sesión navega solo a las pestañas.
-    if (error) Alert.alert("No se pudo entrar", error);
+  async function handleApple() {
+    setBusy("apple");
+    const error = await signInWithApple();
+    setBusy(null);
+    if (error) Alert.alert("No se pudo entrar con Apple", error);
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.hero}>
-        <Text style={styles.brand}>LÍNEA BRAVA</Text>
-        <Text style={styles.tagline}>
-          Graba tus rutas off-road, marca waypoints y compártelas con la comunidad.
-        </Text>
+    <View style={styles.root}>
+      {/* Fondo premium estático. TODO: aquí va <VideoView> cuando se agregue el
+          video de fondo off-road; las capas de abajo sirven de overlay/fallback. */}
+      <View style={StyleSheet.absoluteFill}>
+        <View style={styles.bgBase} />
+        <View style={styles.glowTop} />
+        <View style={styles.glowBottom} />
+        <View style={styles.overlay} />
       </View>
 
-      <Text style={styles.label}>Correo</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="tucorreo@ejemplo.com"
-        placeholderTextColor={colors.mute}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        editable={!busy}
-      />
+      <SafeAreaView style={styles.safe}>
+        {/* Logo discreto */}
+        <View style={styles.logoRow}>
+          <MaterialCommunityIcons
+            name="image-filter-hdr"
+            size={32}
+            color={colors.trail500}
+          />
+          <Text style={styles.wordmark}>LÍNEA BRAVA</Text>
+        </View>
 
-      <Text style={styles.label}>Contraseña</Text>
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        placeholder="••••••••"
-        placeholderTextColor={colors.mute}
-        secureTextEntry
-        autoCapitalize="none"
-        autoCorrect={false}
-        editable={!busy}
-      />
+        <View style={styles.spacer} />
 
-      <Pressable
-        style={[styles.btnPrimary, busy && styles.btnDisabled]}
-        onPress={handleSubmit}
-        disabled={busy}
-      >
-        <Text style={styles.btnPrimaryText}>{busy ? "Entrando…" : "Entrar"}</Text>
-      </Pressable>
+        {/* Contenido principal */}
+        <View style={styles.content}>
+          <Text style={styles.tagline}>La aventura off-road empieza aquí.</Text>
 
-      <View style={styles.separator}>
-        <View style={styles.separatorLine} />
-        <Text style={styles.separatorText}>o</Text>
-        <View style={styles.separatorLine} />
-      </View>
+          <Pressable
+            style={[styles.btnSocial, busy === "google" && styles.btnDisabled]}
+            onPress={handleGoogle}
+            disabled={busy !== null}
+          >
+            <Ionicons name="logo-google" size={20} color={colors.ink950} />
+            <Text style={styles.btnSocialText}>
+              {busy === "google" ? "Abriendo…" : "Continuar con Google"}
+            </Text>
+          </Pressable>
 
-      <Pressable
-        style={[styles.btnGoogle, busyGoogle && styles.btnDisabled]}
-        onPress={handleGoogle}
-        disabled={busyGoogle || busy}
-      >
-        <Text style={styles.btnGoogleText}>{busyGoogle ? "Abriendo…" : "Continuar con Google"}</Text>
-      </Pressable>
+          <Pressable
+            style={[styles.btnSocial, busy === "apple" && styles.btnDisabled]}
+            onPress={handleApple}
+            disabled={busy !== null}
+          >
+            <Ionicons name="logo-apple" size={20} color={colors.ink950} />
+            <Text style={styles.btnSocialText}>
+              {busy === "apple" ? "Abriendo…" : "Continuar con Apple"}
+            </Text>
+          </Pressable>
 
-      <Text style={styles.hint}>
-        Si es tu primera vez, se crea tu cuenta automáticamente.
-      </Text>
-    </KeyboardAvoidingView>
+          <Text style={styles.legal}>
+            Al continuar aceptas los{" "}
+            <Text
+              style={styles.legalLink}
+              onPress={() => Linking.openURL(LEGAL.terminos)}
+            >
+              Términos
+            </Text>{" "}
+            y la{" "}
+            <Text
+              style={styles.legalLink}
+              onPress={() => Linking.openURL(LEGAL.privacidad)}
+            >
+              Privacidad
+            </Text>
+            .
+          </Text>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.ink950, padding: 24, justifyContent: "center" },
-  hero: { marginBottom: 40 },
-  brand: { color: colors.bone, fontSize: 44, fontWeight: "900", letterSpacing: 1 },
-  tagline: { color: colors.mute, fontSize: 16, marginTop: 12, lineHeight: 22 },
-  label: { color: colors.bone, fontSize: 14, fontWeight: "700", marginBottom: 8 },
-  input: {
-    backgroundColor: colors.ink800,
-    borderWidth: 1,
-    borderColor: colors.ink600,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    color: colors.bone,
-    fontSize: 16,
-    marginBottom: 16,
+  root: { flex: 1, backgroundColor: colors.ink950 },
+  safe: { flex: 1, paddingHorizontal: 24, paddingVertical: 12 },
+
+  // Fondo
+  bgBase: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.ink950 },
+  glowTop: {
+    position: "absolute",
+    top: -120,
+    right: -100,
+    width: 320,
+    height: 320,
+    borderRadius: 320,
+    backgroundColor: colors.trail500,
+    opacity: 0.1,
   },
-  btnPrimary: { backgroundColor: colors.trail500, paddingVertical: 16, borderRadius: 999, alignItems: "center", marginTop: 4 },
-  btnPrimaryText: { color: colors.ink950, fontSize: 16, fontWeight: "700" },
+  glowBottom: {
+    position: "absolute",
+    bottom: -140,
+    left: -120,
+    width: 360,
+    height: 360,
+    borderRadius: 360,
+    backgroundColor: colors.trail500,
+    opacity: 0.07,
+  },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
+
+  // Logo
+  logoRow: { alignItems: "center", marginTop: 24, gap: 6 },
+  wordmark: {
+    color: colors.trail500,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 3,
+  },
+
+  spacer: { flex: 1 },
+
+  // Contenido
+  content: { gap: 14 },
+  tagline: {
+    color: colors.bone,
+    fontSize: 26,
+    fontWeight: "800",
+    lineHeight: 32,
+    marginBottom: 10,
+  },
+
+  btnSocial: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: colors.bone,
+    paddingVertical: 16,
+    borderRadius: 999,
+  },
+  btnSocialText: { color: colors.ink950, fontSize: 16, fontWeight: "700" },
   btnDisabled: { opacity: 0.6 },
-  hint: { color: colors.mute, fontSize: 13, marginTop: 16, lineHeight: 19, textAlign: "center" },
-  separator: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 20 },
-  separatorLine: { flex: 1, height: 1, backgroundColor: colors.ink600 },
-  separatorText: { color: colors.mute, fontSize: 13 },
-  btnGoogle: { borderWidth: 1, borderColor: colors.ink600, backgroundColor: colors.ink800, paddingVertical: 16, borderRadius: 999, alignItems: "center" },
-  btnGoogleText: { color: colors.bone, fontSize: 16, fontWeight: "600" },
+
+  legal: {
+    color: colors.mute,
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  legalLink: { color: colors.trail400, textDecorationLine: "underline" },
 });
