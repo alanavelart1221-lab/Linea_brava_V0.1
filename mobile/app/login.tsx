@@ -9,8 +9,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
+
+// Video de fondo (loop silencioso). Asset local optimizado.
+const BG_VIDEO = require("../assets/login-bg.mp4");
 
 // Páginas legales en la web. Placeholder: la web aún no tiene estas rutas;
 // actualiza el dominio/ruta cuando existan.
@@ -22,6 +26,13 @@ const LEGAL = {
 export default function Login() {
   const { signInWithGoogle, signInWithApple } = useAuth();
   const [busy, setBusy] = useState<null | "google" | "apple">(null);
+
+  // Reproduce el video en bucle, en silencio y en automático.
+  const player = useVideoPlayer(BG_VIDEO, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
 
   async function handleGoogle() {
     setBusy("google");
@@ -40,14 +51,16 @@ export default function Login() {
 
   return (
     <View style={styles.root}>
-      {/* Fondo premium estático. TODO: aquí va <VideoView> cuando se agregue el
-          video de fondo off-road; las capas de abajo sirven de overlay/fallback. */}
-      <View style={StyleSheet.absoluteFill}>
-        <View style={styles.bgBase} />
-        <View style={styles.glowTop} />
-        <View style={styles.glowBottom} />
-        <View style={styles.overlay} />
-      </View>
+      {/* Fondo: video off-road a pantalla completa + overlay oscuro para legibilidad */}
+      <VideoView
+        style={StyleSheet.absoluteFill}
+        player={player}
+        contentFit="cover"
+        nativeControls={false}
+        pointerEvents="none"
+      />
+      <View style={styles.overlay} pointerEvents="none" />
+      <View style={styles.overlayBottom} pointerEvents="none" />
 
       <SafeAreaView style={styles.safe}>
         {/* Logo discreto */}
@@ -115,29 +128,16 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ink950 },
   safe: { flex: 1, paddingHorizontal: 24, paddingVertical: 12 },
 
-  // Fondo
-  bgBase: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.ink950 },
-  glowTop: {
+  // Overlays sobre el video para mantener legibilidad
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
+  overlayBottom: {
     position: "absolute",
-    top: -120,
-    right: -100,
-    width: 320,
-    height: 320,
-    borderRadius: 320,
-    backgroundColor: colors.trail500,
-    opacity: 0.1,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "55%",
+    backgroundColor: "rgba(11,12,14,0.6)",
   },
-  glowBottom: {
-    position: "absolute",
-    bottom: -140,
-    left: -120,
-    width: 360,
-    height: 360,
-    borderRadius: 360,
-    backgroundColor: colors.trail500,
-    opacity: 0.07,
-  },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
 
   // Logo
   logoRow: { alignItems: "center", marginTop: 24, gap: 6 },
