@@ -29,6 +29,9 @@ import {
   stopTracking,
   subscribe,
   getTrack,
+  getStartedAt,
+  getActiveRecording,
+  resumeTracking,
   watchApproach,
 } from "@/lib/tracking";
 
@@ -64,7 +67,6 @@ export default function HacerRuta() {
   const approachSub = useRef<{ remove: () => void } | null>(null);
   const recUnsub = useRef<() => void>(() => {});
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startedAt = useRef<number>(0);
   const finished = useRef(false);
   const startedRecording = useRef(false);
 
@@ -74,10 +76,16 @@ export default function HacerRuta() {
     if (session === null) router.replace("/login");
   }, [session]);
 
-  // Carga de la ruta + arranque del watcher de aproximación.
+  // Carga de la ruta + arranque del watcher de aproximación (o reanudación).
   useEffect(() => {
     (async () => {
       if (!id) return;
+
+      // ¿Hay una grabación en curso de esta misma ruta? (cerró y reabrió la app).
+      const active = await getActiveRecording();
+      const resuming =
+        active?.context.kind === "route" && active.context.routeId === id;
+
       // Offline-first: usamos la copia descargada de inmediato y, si hay red,
       // la refrescamos con Supabase.
       const local = await getOfflineRoute(id);
@@ -98,6 +106,13 @@ export default function HacerRuta() {
       setRoute(row);
       setLoading(false);
 
+      // Reanudar: saltamos la aproximación y volvemos directo a grabar.
+      if (resuming) {
+        await resumeTracking();
+        attachRecordingUI();
+        return;
+      }
+
       if (!session || !row || !routeEndpoints(row.track)) return;
 
       const sub = await watchApproach((p) => setApproachPos(p));
@@ -115,10 +130,8 @@ export default function HacerRuta() {
       approachSub.current = null;
       recUnsub.current();
       if (timer.current) clearInterval(timer.current);
-      // Si el usuario salió sin "Terminar", cortamos la grabación de fondo.
-      if (startedRecording.current && !finished.current) {
-        stopTracking().catch(() => undefined);
-      }
+      // No cortamos la grabación al salir: sigue en segundo plano y se reanuda al
+      // volver. Solo "Terminar" o "Descartar" la detienen explícitamente.
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -134,28 +147,37 @@ export default function HacerRuta() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [approachPos, endpoints, phase]);
 
+  // Engancha la UI de grabación al estado de tracking.ts (tiempo, track en vivo).
+  // Se usa tanto al empezar como al reanudar una grabación en curso.
+  function attachRecordingUI() {
+    recUnsub.current(); // suelta una suscripción previa si la hubiera
+    if (timer.current) clearInterval(timer.current);
+    const tick = () => setElapsed(Math.floor((Date.now() - getStartedAt()) / 1000));
+    tick();
+    timer.current = setInterval(tick, 1000);
+    recUnsub.current = subscribe((t) => setUserTrack([...t]));
+    setUserTrack([...getTrack()]);
+    startedRecording.current = true;
+    setRecording(true);
+    setPhase("recording");
+  }
+
   // Empezar a grabar: solo cuando ya estás en el inicio de la ruta.
   async function empezar() {
     if (!session) return;
     approachSub.current?.remove();
     approachSub.current = null;
 
-    const err = await startTracking();
+    const err = await startTracking({
+      kind: "route",
+      routeId: id,
+      routeName: route?.name ?? null,
+    });
     if (err) {
       Alert.alert("Permiso necesario", err);
       return;
     }
-    startedRecording.current = true;
-    startedAt.current = Date.now();
-    setElapsed(0);
-    timer.current = setInterval(
-      () => setElapsed(Math.floor((Date.now() - startedAt.current) / 1000)),
-      1000
-    );
-    recUnsub.current = subscribe((t) => setUserTrack([...t]));
-    setUserTrack([...getTrack()]);
-    setRecording(true);
-    setPhase("recording");
+    attachRecordingUI();
   }
 
   const position: Point | null =
@@ -212,7 +234,7 @@ export default function HacerRuta() {
       track: finalTrack,
       waypoints: [] as Waypoint[],
       durationS: elapsed,
-      startedAt: new Date(startedAt.current || Date.now()).toISOString(),
+      startedAt: new Date(getStartedAt() || Date.now()).toISOString(),
     };
     const { error } = await guardarActividad(payload);
     setSaving(false);

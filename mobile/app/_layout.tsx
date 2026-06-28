@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View, ActivityIndicator, AppState } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -6,11 +6,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { syncPendingActivities } from "@/lib/offline";
+import { getActiveRecording } from "@/lib/tracking";
 
 function RootNav() {
   const { session, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const resumeChecked = useRef(false);
 
   useEffect(() => {
     if (loading) return;
@@ -18,6 +20,25 @@ function RootNav() {
     if (!session && !inLogin) router.replace("/login");
     else if (session && inLogin) router.replace("/");
   }, [session, loading, segments]);
+
+  // Recuperación de grabación: si la app se cerró (o el SO la relanzó) a mitad de
+  // un recorrido, al volver a entrar regresamos a la pantalla correspondiente en
+  // modo "reanudar". Solo en el arranque en frío; con la app viva, cada pantalla
+  // se reengancha sola.
+  useEffect(() => {
+    if (!session || resumeChecked.current) return;
+    resumeChecked.current = true;
+    getActiveRecording()
+      .then((rec) => {
+        if (!rec) return;
+        if (rec.context.kind === "route") {
+          router.push(`/hacer-ruta/${rec.context.routeId}?resume=1`);
+        } else {
+          router.push("/(tabs)/grabar?resume=1");
+        }
+      })
+      .catch(() => undefined);
+  }, [session]);
 
   // Sube las actividades grabadas sin conexión: al iniciar con sesión y cada vez
   // que la app vuelve a primer plano (donde suele recuperarse la señal).

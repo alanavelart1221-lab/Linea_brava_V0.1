@@ -16,7 +16,7 @@ import * as Location from "expo-location";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { NavMapWebView } from "@/components/NavMapWebView";
-import { haversineKm, trackDistanceKm, validarTrack, type Point } from "@/lib/geo";
+import { trackDistanceKm, validarTrack, type Point } from "@/lib/geo";
 import {
   guardarActividad,
   crearRutaDesdeActividad,
@@ -25,6 +25,17 @@ import {
   type WaypointCategory,
   type Nivel,
 } from "@/lib/activities";
+import {
+  startTracking,
+  stopTracking,
+  subscribe,
+  getTrack,
+  getWaypoints,
+  getStartedAt,
+  getActiveRecording,
+  resumeTracking,
+  addWaypoint,
+} from "@/lib/tracking";
 
 type Phase = "idle" | "recording" | "review";
 type ReviewMode = "choice" | "ruta";
@@ -56,52 +67,65 @@ export default function Grabar() {
   const [level, setLevel] = useState<Nivel>("Verde");
   const [description, setDescription] = useState("");
 
-  const subscription = useRef<Location.LocationSubscription | null>(null);
+  const recUnsub = useRef<() => void>(() => {});
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startedAt = useRef<number>(0);
+  const resumeChecked = useRef(false);
 
   const distance = trackDistanceKm(track);
   const position: Point | null = track.length ? track[track.length - 1] : null;
 
   useEffect(() => {
     return () => {
-      subscription.current?.remove();
+      // Al salir solo soltamos los listeners y el cronómetro de la UI; la
+      // grabación sigue en segundo plano y se reanuda al volver.
+      recUnsub.current();
       if (timer.current) clearInterval(timer.current);
     };
   }, []);
 
+  // Reanudar una grabación libre en curso (p. ej. tras cerrar y reabrir la app).
+  useEffect(() => {
+    if (resumeChecked.current) return;
+    resumeChecked.current = true;
+    (async () => {
+      const active = await getActiveRecording();
+      if (active?.context.kind !== "free") return;
+      await resumeTracking();
+      attachRecordingUI();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Engancha la UI al estado de tracking.ts (track en vivo, waypoints, tiempo).
+  function attachRecordingUI() {
+    recUnsub.current(); // suelta una suscripción previa si la hubiera
+    if (timer.current) clearInterval(timer.current);
+    const tick = () => setElapsed(Math.floor((Date.now() - getStartedAt()) / 1000));
+    tick();
+    timer.current = setInterval(tick, 1000);
+    recUnsub.current = subscribe((t) => setTrack([...t]));
+    setTrack([...getTrack()]);
+    setWaypoints([...getWaypoints()]);
+    setPhase("recording");
+  }
+
   async function startRecording() {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permiso necesario", "Necesitamos tu ubicación para grabar la ruta.");
-      return;
-    }
     setTrack([]);
     setWaypoints([]);
     setElapsed(0);
-    setPhase("recording");
-    startedAt.current = Date.now();
-
-    timer.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startedAt.current) / 1000));
-    }, 1000);
-
-    subscription.current = await Location.watchPositionAsync(
-      { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 2000, distanceInterval: 5 },
-      (pos) => {
-        const p: Point = [pos.coords.latitude, pos.coords.longitude];
-        setTrack((prev) => {
-          if (prev.length > 0 && haversineKm(prev[prev.length - 1], p) < 0.01) return prev;
-          return [...prev, p];
-        });
-      }
-    );
+    const err = await startTracking({ kind: "free" });
+    if (err) {
+      Alert.alert("Permiso necesario", err);
+      return;
+    }
+    attachRecordingUI();
   }
 
-  function stopRecording() {
-    subscription.current?.remove();
-    subscription.current = null;
+  async function stopRecording() {
+    recUnsub.current();
+    recUnsub.current = () => {};
     if (timer.current) clearInterval(timer.current);
+    await stopTracking();
     setReviewMode("choice");
     setPhase("review");
   }
@@ -118,20 +142,19 @@ export default function Grabar() {
 
   function saveWaypoint() {
     if (!wpCoord.current) return;
-    setWaypoints((prev) => [
-      ...prev,
-      {
-        lat: wpCoord.current![0],
-        lng: wpCoord.current![1],
-        name: wpName.trim() || WAYPOINT_CATEGORIES.find((c) => c.key === wpCat)!.label,
-        category: wpCat,
-      },
-    ]);
+    const wp: Waypoint = {
+      lat: wpCoord.current[0],
+      lng: wpCoord.current[1],
+      name: wpName.trim() || WAYPOINT_CATEGORIES.find((c) => c.key === wpCat)!.label,
+      category: wpCat,
+    };
+    addWaypoint(wp); // persiste en disco para sobrevivir a segundo plano
+    setWaypoints((prev) => [...prev, wp]);
     setWpOpen(false);
   }
 
   function startedAtIso() {
-    return new Date(startedAt.current || Date.now()).toISOString();
+    return new Date(getStartedAt() || Date.now()).toISOString();
   }
 
   async function onGuardarActividad() {
@@ -336,7 +359,9 @@ export default function Grabar() {
           <Stat label="Puntos" value={String(track.length)} />
           <Stat label="Waypoints" value={String(waypoints.length)} />
         </View>
-        <Text style={[styles.live, { color: colors.trail400 }]}>● Grabando… mantén la app abierta.</Text>
+        <Text style={[styles.live, { color: colors.trail400 }]}>
+          ● Grabando… sigue activo aunque cierres la app o apagues la pantalla.
+        </Text>
         <Pressable style={styles.btnWaypoint} onPress={openWaypoint}>
           <Text style={styles.btnWaypointText}>+ Marcar punto (waypoint)</Text>
         </Pressable>
