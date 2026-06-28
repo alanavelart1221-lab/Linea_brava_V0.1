@@ -51,7 +51,7 @@ export default function Login() {
 
   return (
     <View style={styles.root}>
-      {/* Fondo: video off-road a pantalla completa + overlay oscuro para legibilidad */}
+      {/* Fondo: video off-road a pantalla completa */}
       <VideoView
         style={StyleSheet.absoluteFill}
         player={player}
@@ -59,8 +59,8 @@ export default function Login() {
         nativeControls={false}
         pointerEvents="none"
       />
+      {/* Overlay oscuro parejo sobre todo el video, para legibilidad */}
       <View style={styles.overlay} pointerEvents="none" />
-      <View style={styles.overlayBottom} pointerEvents="none" />
 
       <SafeAreaView style={styles.safe}>
         {/* Logo discreto */}
@@ -73,11 +73,12 @@ export default function Login() {
           <Text style={styles.wordmark}>LÍNEA BRAVA</Text>
         </View>
 
-        <View style={styles.spacer} />
-
-        {/* Contenido principal */}
-        <View style={styles.content}>
-          <Text style={styles.tagline}>La aventura off-road empieza aquí.</Text>
+        {/* Contenido principal (centrado verticalmente) */}
+        <View style={styles.center}>
+          <Text style={styles.tagline}>
+            La aventura <Text style={styles.taglineAccent}>off-road</Text> empieza
+            aquí.
+          </Text>
 
           <Pressable
             style={[styles.btnSocial, busy === "google" && styles.btnDisabled]}
@@ -100,25 +101,26 @@ export default function Login() {
               {busy === "apple" ? "Abriendo…" : "Continuar con Apple"}
             </Text>
           </Pressable>
-
-          <Text style={styles.legal}>
-            Al continuar aceptas los{" "}
-            <Text
-              style={styles.legalLink}
-              onPress={() => Linking.openURL(LEGAL.terminos)}
-            >
-              Términos
-            </Text>{" "}
-            y la{" "}
-            <Text
-              style={styles.legalLink}
-              onPress={() => Linking.openURL(LEGAL.privacidad)}
-            >
-              Privacidad
-            </Text>
-            .
-          </Text>
         </View>
+
+        {/* Enlaces legales (abajo) */}
+        <Text style={styles.legal}>
+          Al continuar aceptas los{" "}
+          <Text
+            style={styles.legalLink}
+            onPress={() => Linking.openURL(LEGAL.terminos)}
+          >
+            Términos
+          </Text>{" "}
+          y la{" "}
+          <Text
+            style={styles.legalLink}
+            onPress={() => Linking.openURL(LEGAL.privacidad)}
+          >
+            Privacidad
+          </Text>
+          .
+        </Text>
       </SafeAreaView>
     </View>
   );
@@ -126,18 +128,8 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ink950 },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
   safe: { flex: 1, paddingHorizontal: 24, paddingVertical: 12 },
-
-  // Overlays sobre el video para mantener legibilidad
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
-  overlayBottom: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "55%",
-    backgroundColor: "rgba(11,12,14,0.6)",
-  },
 
   // Logo
   logoRow: { alignItems: "center", marginTop: 24, gap: 6 },
@@ -148,17 +140,20 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
 
-  spacer: { flex: 1 },
-
-  // Contenido
-  content: { gap: 14 },
+  // Contenido centrado
+  center: { flex: 1, justifyContent: "center", gap: 14 },
   tagline: {
     color: colors.bone,
     fontSize: 26,
     fontWeight: "800",
     lineHeight: 32,
     marginBottom: 10,
+    // Sombra sutil para reforzar la legibilidad sobre el video.
+    textShadowColor: "rgba(0,0,0,0.45)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
+  taglineAccent: { color: colors.trail500 },
 
   btnSocial: {
     flexDirection: "row",
@@ -173,11 +168,14 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
 
   legal: {
-    color: colors.mute,
+    color: colors.bone,
     fontSize: 12,
     textAlign: "center",
     lineHeight: 18,
     marginTop: 6,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   legalLink: { color: colors.trail400, textDecorationLine: "underline" },
 });
