@@ -44,11 +44,18 @@ export interface Provider {
   logo_url: string | null;
   gallery: string[];
   featured: boolean;
+  // Taller: horario, coords y verificación (admin-only)
+  horario?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  verificado?: boolean;
   // Prueba / suscripción / moderación
   trial_start: string | null;
   trial_end: string | null;
   rejected_reason: string | null;
   info_requested: string | null;
+  // Fiscal
+  rfc?: string | null;
 }
 
 // Producto / accesorio de la tienda de un proveedor (tabla `provider_products`).
@@ -61,7 +68,96 @@ export interface ProviderProduct {
   currency: string;
   image_url: string | null;
   created_at: string;
+  // Campos de marketplace
+  external_url: string | null;
+  source_platform: string;   // 'manual' | 'mercadolibre' | 'web'
+  source_id: string | null;
+  category: string | null;
+  stock: number | null;      // null = sin límite
+  active: boolean;
 }
+
+// Producto del marketplace enriquecido con datos del proveedor (join en el feed).
+export interface MarketplaceProduct extends ProviderProduct {
+  provider_name: string;
+  provider_logo_url: string | null;
+  provider_type: ProviderType;
+}
+
+// Fuente de catálogo importado (tabla `provider_catalog_sources`).
+export interface CatalogSource {
+  id: string;
+  provider_id: string;
+  url: string;
+  platform: "mercadolibre" | "web";
+  seller_id_or_store: string | null;
+  last_synced_at: string | null;
+  product_count: number;
+  status: "pendiente" | "ok" | "error";
+  error_message: string | null;
+  created_at: string;
+}
+
+// Orden de compra (tabla `orders`).
+export type OrderStatus = "pendiente" | "pagado" | "enviando" | "entregado" | "cancelado";
+
+export interface Order {
+  id: string;
+  buyer_id: string;
+  status: OrderStatus;
+  total_mxn: number;
+  shipping_address: ShippingAddress;
+  mp_preference_id: string | null;
+  mp_payment_id: string | null;
+  mp_status: string | null;
+  created_at: string;
+  paid_at: string | null;
+}
+
+export interface ShippingAddress {
+  nombre: string;
+  calle: string;
+  colonia: string;
+  ciudad: string;
+  estado: string;
+  cp: string;
+  telefono: string;
+}
+
+// Ítem de una orden (tabla `order_items`).
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  provider_id: string;
+  product_id: string | null;
+  product_name: string;
+  product_image_url: string | null;
+  unit_price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+// Metadatos de estado de orden para mostrar en UI.
+export const ORDER_STATUS_META: Record<OrderStatus, { label: string; className: string }> = {
+  pendiente:  { label: "Pendiente de pago", className: "border-trail-500/40 bg-trail-500/10 text-trail-400" },
+  pagado:     { label: "Pagado",            className: "border-go-500/40 bg-go-500/10 text-go-400" },
+  enviando:   { label: "En camino",         className: "border-blue-500/40 bg-blue-500/10 text-blue-400" },
+  entregado:  { label: "Entregado",         className: "border-go-500/40 bg-go-500/15 text-go-300" },
+  cancelado:  { label: "Cancelado",         className: "border-ink-500/50 bg-ink-700/40 text-mute" },
+};
+
+// Categorías del marketplace.
+export const MARKETPLACE_CATEGORIES = [
+  { id: "todos",        label: "Todos" },
+  { id: "partes",       label: "Partes y Refacciones" },
+  { id: "accesorios",   label: "Accesorios" },
+  { id: "equipamiento", label: "Equipamiento Overland" },
+  { id: "neumaticos",   label: "Llantas y Neumáticos" },
+  { id: "herramientas", label: "Herramientas" },
+  { id: "otros",        label: "Otros" },
+] as const;
+
+export type MarketplaceCategoryId = typeof MARKETPLACE_CATEGORIES[number]["id"];
 
 // Servicio del proveedor (tabla `provider_services`).
 export interface ProviderService {
@@ -194,7 +290,7 @@ export function diasRestantesPrueba(trialEnd: string | null): number | null {
 
 // Columnas de `providers` necesarias para construir un `Provider` en el cliente.
 export const PROVIDER_COLUMNS =
-  "id, name, type, estado, state, city, description, specialty, phone, email, whatsapp, website, address, servicios, marcas, social, logo_url, gallery, featured, trial_start, trial_end, rejected_reason, info_requested";
+  "id, name, type, estado, state, city, description, specialty, phone, email, whatsapp, website, address, servicios, marcas, social, logo_url, gallery, featured, horario, lat, lng, verificado, trial_start, trial_end, rejected_reason, info_requested, rfc";
 
 // Fila cruda de Supabase (columnas nullable). Se mapea con `mapProviderRow`.
 export interface ProviderRow {
@@ -217,10 +313,15 @@ export interface ProviderRow {
   logo_url: string | null;
   gallery: string[] | null;
   featured: boolean;
+  horario: string | null;
+  lat: number | null;
+  lng: number | null;
+  verificado: boolean;
   trial_start: string | null;
   trial_end: string | null;
   rejected_reason: string | null;
   info_requested: string | null;
+  rfc: string | null;
 }
 
 // Normaliza una fila de Supabase al modelo `Provider` que usa la UI.
@@ -245,10 +346,15 @@ export function mapProviderRow(p: ProviderRow): Provider {
     logo_url: p.logo_url,
     gallery: p.gallery ?? [],
     featured: p.featured,
+    horario: p.horario,
+    lat: p.lat,
+    lng: p.lng,
+    verificado: p.verificado,
     trial_start: p.trial_start,
     trial_end: p.trial_end,
     rejected_reason: p.rejected_reason,
     info_requested: p.info_requested,
+    rfc: p.rfc,
   };
 }
 

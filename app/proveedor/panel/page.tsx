@@ -19,14 +19,11 @@ import {
   type ProviderProduct,
   type ProviderPromotion,
   type ProviderRow,
-  type ProviderService,
   type ProviderSubscription,
   type QuoteRequest,
 } from "@/lib/providers";
 import { ProductForm } from "./ProductForm";
 import { DeleteProductButton } from "./DeleteProductButton";
-import { ServicioForm } from "./ServicioForm";
-import { DeleteServiceButton } from "./DeleteServiceButton";
 import { QuoteEstadoControls } from "./QuoteEstadoControls";
 import { PromocionForm } from "./PromocionForm";
 import { DeletePromocionButton } from "./DeletePromocionButton";
@@ -34,23 +31,27 @@ import { TogglePromocionButton } from "./TogglePromocionButton";
 import { PerfilForm } from "./PerfilForm";
 import { ReenviarButton } from "./ReenviarButton";
 import { ActivarSuscripcionButton } from "./ActivarSuscripcionButton";
+import { ImportarSection } from "./ImportarSection";
+import { ORDER_STATUS_META, type OrderStatus } from "@/lib/providers";
 
 export const dynamic = "force-dynamic";
 
 type Seccion =
   | "perfil"
   | "productos"
-  | "servicios"
   | "proyectos"
   | "cotizaciones"
   | "promociones"
   | "estadisticas"
-  | "suscripcion";
+  | "suscripcion"
+  | "importar"
+  | "pedidos";
 
 const NAV: { id: Seccion; label: string }[] = [
   { id: "perfil", label: "Mi Perfil" },
   { id: "productos", label: "Productos" },
-  { id: "servicios", label: "Servicios" },
+  { id: "importar", label: "Importar catálogo" },
+  { id: "pedidos", label: "Pedidos" },
   { id: "proyectos", label: "Proyectos" },
   { id: "cotizaciones", label: "Cotizaciones" },
   { id: "promociones", label: "Promociones" },
@@ -146,7 +147,10 @@ export default async function ProveedorPanelPage({
             </div>
           </div>
           {esVisiblePublico(provider.estado) && (
-            <Link href={`/proveedores/${provider.id}`} className="btn-ghost">
+            <Link
+              href={provider.type === "taller" ? `/talleres/${provider.id}` : `/proveedores/${provider.id}`}
+              className="btn-ghost"
+            >
               Ver mi perfil público
             </Link>
           )}
@@ -187,13 +191,19 @@ export default async function ProveedorPanelPage({
 
             {seccion === "suscripcion" && <SuscripcionSection provider={provider} />}
 
-            {seccion === "servicios" && <ServiciosSection providerId={provider.id} />}
-
             {seccion === "cotizaciones" && <CotizacionesSection providerId={provider.id} />}
 
             {seccion === "promociones" && <PromocionesSection providerId={provider.id} />}
 
             {seccion === "estadisticas" && <EstadisticasSection providerId={provider.id} />}
+
+            {seccion === "importar" && (
+              <Section title="Importar catálogo">
+                <ImportarSection providerId={provider.id} />
+              </Section>
+            )}
+
+            {seccion === "pedidos" && <PedidosSection providerId={provider.id} />}
 
             {seccion === "proyectos" && (
               <Stub title="Proyectos" detalle="Pronto podrás mostrar tus proyectos y trabajos realizados." />
@@ -353,56 +363,6 @@ async function ProductosSection({ providerId }: { providerId: string }) {
   );
 }
 
-async function ServiciosSection({ providerId }: { providerId: string }) {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("provider_services")
-    .select("id, provider_id, name, description, price, currency, created_at")
-    .eq("provider_id", providerId)
-    .order("created_at", { ascending: false });
-  const servicios = (data as ProviderService[] | null) ?? [];
-
-  return (
-    <Section title="Servicios">
-      <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
-        <div className="card-line h-fit p-6">
-          <h3 className="mb-5 font-display text-xl text-bone">Agregar servicio</h3>
-          <ServicioForm providerId={providerId} />
-        </div>
-        <div>
-          <h3 className="mb-5 font-display text-xl text-bone">
-            Mis servicios <span className="text-base font-normal text-mute">({servicios.length})</span>
-          </h3>
-          {servicios.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-ink-600 bg-ink-900/40 p-10 text-center">
-              <p className="text-mute">Aún no has agregado servicios.</p>
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {servicios.map((s) => (
-                <li key={s.id} className="card-line flex items-start gap-4 p-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-bone">{s.name}</p>
-                    {s.description && (
-                      <p className="mt-1 text-sm text-mute">{s.description}</p>
-                    )}
-                    {s.price != null && (
-                      <p className="mt-1 text-sm text-trail-500">
-                        ${s.price.toLocaleString("es-MX")} {s.currency}
-                      </p>
-                    )}
-                  </div>
-                  <DeleteServiceButton serviceId={s.id} providerId={providerId} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
 async function CotizacionesSection({ providerId }: { providerId: string }) {
   const supabase = await createClient();
   const { data } = await supabase
@@ -533,7 +493,6 @@ async function EstadisticasSection({ providerId }: { providerId: string }) {
     cotizacionesTotal,
     cotizaciones30,
     productos,
-    servicios,
     promosActivas,
   ] = await Promise.all([
     supabase.from("provider_events").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("tipo", "vista"),
@@ -543,7 +502,6 @@ async function EstadisticasSection({ providerId }: { providerId: string }) {
     supabase.from("quote_requests").select("id", { count: "exact", head: true }).eq("provider_id", providerId),
     supabase.from("quote_requests").select("id", { count: "exact", head: true }).eq("provider_id", providerId).gte("created_at", desde30),
     supabase.from("provider_products").select("id", { count: "exact", head: true }).eq("provider_id", providerId),
-    supabase.from("provider_services").select("id", { count: "exact", head: true }).eq("provider_id", providerId),
     supabase.from("provider_promotions").select("id", { count: "exact", head: true }).eq("provider_id", providerId).eq("activo", true),
   ]);
 
@@ -557,7 +515,6 @@ async function EstadisticasSection({ providerId }: { providerId: string }) {
         <Metrica label="Contactos" valor={contactosTotal.count ?? 0} sub={`${contactos30.count ?? 0} en 30 días`} />
         <Metrica label="Cotizaciones" valor={cotizacionesTotal.count ?? 0} sub={`${cotizaciones30.count ?? 0} en 30 días`} />
         <Metrica label="Productos" valor={productos.count ?? 0} />
-        <Metrica label="Servicios" valor={servicios.count ?? 0} />
         <Metrica label="Promociones activas" valor={promosActivas.count ?? 0} />
       </div>
     </Section>
@@ -655,5 +612,138 @@ function Dato({ label, children }: { label: string; children: React.ReactNode })
       <p className="text-xs uppercase tracking-widest text-mute">{label}</p>
       <div className="mt-2">{children}</div>
     </div>
+  );
+}
+
+interface OrderItemRow {
+  id: string;
+  order_id: string;
+  product_name: string;
+  product_image_url: string | null;
+  unit_price: number;
+  quantity: number;
+  subtotal: number;
+  orders: {
+    id: string;
+    status: OrderStatus;
+    created_at: string;
+    shipping_address: {
+      nombre: string;
+      ciudad: string;
+      estado: string;
+      telefono: string;
+    };
+  };
+}
+
+async function PedidosSection({ providerId }: { providerId: string }) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("order_items")
+    .select(`
+      id, order_id, product_name, product_image_url, unit_price, quantity, subtotal,
+      orders ( id, status, created_at, shipping_address )
+    `)
+    .eq("provider_id", providerId)
+    .order("created_at", { ascending: false, referencedTable: "orders" })
+    .limit(100);
+
+  const items = (data as OrderItemRow[] | null) ?? [];
+
+  // Agrupar por order_id para mostrar una fila por pedido
+  const ordersMap = new Map<string, { order: OrderItemRow["orders"]; items: OrderItemRow[] }>();
+  for (const item of items) {
+    if (!item.orders) continue;
+    const key = item.order_id;
+    if (!ordersMap.has(key)) {
+      ordersMap.set(key, { order: item.orders, items: [] });
+    }
+    ordersMap.get(key)!.items.push(item);
+  }
+  const orders = Array.from(ordersMap.values());
+
+  return (
+    <Section title="Pedidos">
+      {orders.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink-600 bg-ink-900/40 p-14 text-center">
+          <p className="text-mute">
+            Aún no has recibido pedidos. Aparecerán aquí cuando un cliente compre
+            alguno de tus productos.
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {orders.map(({ order, items: orderItems }) => {
+            const statusMeta = ORDER_STATUS_META[order.status] ?? {
+              label: order.status,
+              className: "border-ink-600 bg-ink-800 text-mute",
+            };
+            const subtotal = orderItems.reduce((acc, i) => acc + i.subtotal, 0);
+            const addr = order.shipping_address;
+            return (
+              <li key={order.id} className="card-line p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusMeta.className}`}>
+                        {statusMeta.label}
+                      </span>
+                      <span className="text-xs text-mute">
+                        {new Date(order.created_at).toLocaleDateString("es-MX", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </span>
+                      <span className="text-xs text-mute">·</span>
+                      <span className="text-xs text-bone">
+                        ${subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN
+                      </span>
+                    </div>
+
+                    {/* Comprador */}
+                    <p className="mt-2 text-sm font-medium text-bone">
+                      {addr?.nombre ?? "—"}
+                    </p>
+                    {addr && (
+                      <p className="text-xs text-mute">
+                        {addr.ciudad}, {addr.estado} · {addr.telefono}
+                      </p>
+                    )}
+
+                    {/* Lista de productos */}
+                    <ul className="mt-3 flex flex-col gap-2">
+                      {orderItems.map((oi) => (
+                        <li key={oi.id} className="flex items-center gap-3">
+                          {oi.product_image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={oi.product_image_url}
+                              alt={oi.product_name}
+                              className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ink-800 text-xs text-mute/40">
+                              📦
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm text-bone">{oi.product_name}</p>
+                            <p className="text-xs text-mute">
+                              {oi.quantity} × ${oi.unit_price.toLocaleString("es-MX")}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-sm text-trail-400">
+                            ${oi.subtotal.toLocaleString("es-MX")}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Section>
   );
 }

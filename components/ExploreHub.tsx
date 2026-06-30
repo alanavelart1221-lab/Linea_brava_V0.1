@@ -26,10 +26,10 @@ const pillars = [
     ),
   },
   {
-    label: "Proveedores",
-    href: "/proveedores",
-    blurb: "Talleres, refacciones y guías cerca de ti.",
-    cta: "Ver proveedores",
+    label: "Marketplace",
+    href: "/marketplace",
+    blurb: "Partes, accesorios y equipamiento overland de la comunidad.",
+    cta: "Ver marketplace",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
         <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.8" />

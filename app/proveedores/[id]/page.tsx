@@ -86,7 +86,7 @@ export default async function ProveedorDetallePage({
       <TrackView providerId={provider.id} />
       <main className="shell pt-28 pb-20">
         <Link
-          href="/proveedores"
+          href="/marketplace"
           className="link-underline text-sm text-mute hover:text-bone"
         >
           ← Volver al directorio

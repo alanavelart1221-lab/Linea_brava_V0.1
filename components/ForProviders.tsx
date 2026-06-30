@@ -99,12 +99,12 @@ export function ForProviders() {
               variants={fadeUp}
               className="mt-8 flex flex-wrap gap-3"
             >
-              <Link href="/proveedores#planes" className="btn-primary">
+              <Link href="/marketplace#planes" className="btn-primary">
                 Ver planes
                 <Arrow />
               </Link>
-              <Link href="/proveedores" className="btn-ghost">
-                Ver directorio
+              <Link href="/marketplace" className="btn-ghost">
+                Ver marketplace
               </Link>
             </motion.div>
           </div>

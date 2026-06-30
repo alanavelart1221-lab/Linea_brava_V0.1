@@ -4,13 +4,23 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthButton } from "./AuthButton";
+import { CartButton } from "./CartButton";
 
 const links = [
-  { href: "/rutas", label: "Rutas" },
-  { href: "/eventos", label: "Eventos" },
-  { href: "/tips", label: "Tips" },
-  { href: "/proveedores", label: "Proveedores" },
-  { href: "/foro", label: "Foro" },
+  { href: "/rutas",       label: "Rutas" },
+  { href: "/eventos",     label: "Eventos" },
+  { href: "/tips",        label: "Tips" },
+  { href: "/marketplace", label: "Marketplace" },
+  { href: "/talleres",    label: "Talleres" },
+  { href: "/foro",        label: "Foro" },
+];
+
+const providerLinks = [
+  { href: "/proveedor/panel",                        label: "Dashboard" },
+  { href: "/proveedor/panel?seccion=productos",      label: "Mis Productos" },
+  { href: "/proveedor/panel?seccion=pedidos",        label: "Pedidos" },
+  { href: "/proveedor/panel?seccion=estadisticas",   label: "Métricas" },
+  { href: "/proveedor/panel?seccion=importar",       label: "Importar" },
 ];
 
 export function Navbar() {
@@ -35,9 +45,7 @@ export function Navbar() {
     setModoProveedor(m === "proveedor");
   }, []);
 
-  const navLinks = modoProveedor
-    ? [{ href: "/proveedor/panel", label: "Mi negocio" }, ...links]
-    : links;
+  const navLinks = modoProveedor ? providerLinks : links;
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 sm:px-4 sm:pt-4">
@@ -72,6 +80,7 @@ export function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
+          {!modoProveedor && <CartButton />}
           <AuthButton />
         </div>
 
@@ -122,7 +131,8 @@ export function Navbar() {
                   </Link>
                 </li>
               ))}
-              <li className="mt-2 border-t border-ink-700 pt-3">
+              <li className="mt-2 border-t border-ink-700 pt-3 flex items-center gap-3">
+                {!modoProveedor && <CartButton />}
                 <AuthButton />
               </li>
             </ul>

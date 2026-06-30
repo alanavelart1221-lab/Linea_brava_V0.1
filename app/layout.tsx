@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Sora } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/components/CartProvider";
+import { CartDrawer } from "@/components/CartDrawer";
 
 // Display: bold, condensed, built for big adventure headlines.
 const display = Bebas_Neue({
@@ -65,7 +67,10 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
-        {children}
+        <CartProvider>
+          <CartDrawer />
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

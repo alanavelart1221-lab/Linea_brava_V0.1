@@ -74,6 +74,12 @@ export function PerfilForm({ provider }: { provider: Provider }) {
           <span className="text-sm font-semibold text-bone">Dirección</span>
           <input name="address" type="text" maxLength={160} defaultValue={provider.address ?? ""} className="input-field" />
         </label>
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-semibold text-bone">
+            Horario de atención <span className="font-normal text-mute">(opcional)</span>
+          </span>
+          <input name="horario" type="text" maxLength={100} defaultValue={provider.horario ?? ""} className="input-field" placeholder="Ej. Lun-Sab 9:00-18:00" />
+        </label>
       </fieldset>
 
       <fieldset className="flex flex-col gap-6">

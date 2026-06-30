@@ -73,6 +73,12 @@ export async function solicitarProveedor(
     return { error: "Selecciona un tipo de proveedor válido." };
   }
 
+  const rfcRaw = (formData.get("rfc") as string)?.trim().toUpperCase() || null;
+  if (rfcRaw && !/^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/.test(rfcRaw)) {
+    return { error: "El RFC no tiene el formato correcto (12 o 13 caracteres)." };
+  }
+
+  const horario = (formData.get("horario") as string)?.trim() || null;
   const specialty = parseList(formData.get("specialty") as string, 8);
   const servicios = parseList(formData.get("servicios") as string, 12);
   const marcas = parseList(formData.get("marcas") as string, 20);
@@ -117,6 +123,8 @@ export async function solicitarProveedor(
       logo_url: logoUrl,
       gallery: galleryUrls,
       estado: "pendiente",
+      rfc: rfcRaw,
+      horario,
     })
     .select("id")
     .single<{ id: string }>();

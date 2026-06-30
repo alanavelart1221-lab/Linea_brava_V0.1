@@ -21,7 +21,12 @@
       "mcp__supabase__search_docs",
       "Bash(xargs -0 grep -l \"create table.*user_routes\")",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(ls -la \"C:\\\\Users\\\\Usuario\\\\Documents\\\\Linea_Brava2\\\\\" | head -20)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

@@ -69,6 +69,7 @@ export async function addProduct(
 
   revalidatePath("/proveedor/panel");
   revalidatePath(`/proveedores/${providerId}`);
+  revalidatePath("/marketplace");
   return { error: null, success: true };
 }
 
@@ -281,6 +282,7 @@ export async function actualizarPerfil(
     whatsapp: (formData.get("whatsapp") as string)?.trim() || null,
     address: (formData.get("address") as string)?.trim() || null,
     website: (formData.get("website") as string)?.trim() || null,
+    horario: (formData.get("horario") as string)?.trim() || null,
     specialty: parseList(formData.get("specialty") as string, 8),
     servicios: parseList(formData.get("servicios") as string, 12),
     marcas: parseList(formData.get("marcas") as string, 20),
@@ -341,5 +343,83 @@ export async function deleteProduct(
 
   revalidatePath("/proveedor/panel");
   revalidatePath(`/proveedores/${providerId}`);
+  revalidatePath("/marketplace");
   return { error: null };
+}
+
+// --------------------------------------------------------
+// Importación masiva de catálogo
+// --------------------------------------------------------
+export interface ImportedProductInput {
+  name:         string;
+  description:  string | null;
+  price:        number | null;
+  image_url:    string | null;
+  external_url: string;
+  source_id:    string | null;
+  category:     string | null;
+}
+
+export async function saveImportedProducts(
+  providerId: string,
+  products: ImportedProductInput[],
+  source: { url: string; platform: string; seller_id_or_store: string | null }
+): Promise<{ error: string | null; count: number }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado.", count: 0 };
+
+  // Verificar propiedad
+  const { data: provider } = await supabase
+    .from("providers")
+    .select("id")
+    .eq("id", providerId)
+    .eq("user_id", user.id)
+    .single();
+  if (!provider) return { error: "No tienes permiso para este proveedor.", count: 0 };
+
+  if (!products.length) return { error: "No hay productos para guardar.", count: 0 };
+
+  // Insertar productos en lotes de 50
+  const BATCH = 50;
+  let saved = 0;
+  for (let i = 0; i < products.length; i += BATCH) {
+    const batch = products.slice(i, i + BATCH).map((p) => ({
+      provider_id:     providerId,
+      name:            p.name,
+      description:     p.description,
+      price:           p.price,
+      currency:        "MXN",
+      image_url:       p.image_url,
+      external_url:    p.external_url || null,
+      source_platform: source.platform,
+      source_id:       p.source_id,
+      category:        p.category,
+      active:          true,
+    }));
+    const { error } = await supabase.from("provider_products").insert(batch);
+    if (!error) saved += batch.length;
+  }
+
+  // Upsert de la fuente de catálogo
+  await supabase
+    .from("provider_catalog_sources")
+    .upsert(
+      {
+        provider_id:        providerId,
+        url:                source.url,
+        platform:           source.platform === "mercadolibre" ? "mercadolibre" : "web",
+        seller_id_or_store: source.seller_id_or_store,
+        last_synced_at:     new Date().toISOString(),
+        product_count:      saved,
+        status:             "ok",
+        error_message:      null,
+      },
+      { onConflict: "provider_id,url", ignoreDuplicates: false }
+    );
+
+  revalidatePath("/marketplace");
+  revalidatePath("/proveedor/panel");
+
+  return { error: null, count: saved };
 }

@@ -5,7 +5,7 @@ const columns = [
       { label: "Rutas", href: "/rutas" },
       { label: "Eventos", href: "/eventos" },
       { label: "Tips", href: "/tips" },
-      { label: "Proveedores", href: "/proveedores" },
+      { label: "Marketplace", href: "/marketplace" },
       { label: "Foro", href: "/foro" },
     ],
   },
