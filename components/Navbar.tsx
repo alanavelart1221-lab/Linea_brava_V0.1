@@ -24,16 +24,8 @@ const providerLinks = [
 ];
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [modoProveedor, setModoProveedor] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Modo proveedor (cookie lb_modo): muestra acceso a su panel. Las rutas/eventos
   // siguen disponibles; al cambiar a modo usuario el proveedor las usa normal.
@@ -53,11 +45,7 @@ export function Navbar() {
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className={`flex w-full max-w-content items-center justify-between rounded-full border px-4 py-2.5 transition-colors duration-300 sm:px-5 ${
-          scrolled
-            ? "border-ink-700 bg-ink-900/80 backdrop-blur-xl"
-            : "border-transparent bg-transparent"
-        }`}
+        className="flex w-full max-w-content items-center justify-between rounded-full border border-ink-700 bg-ink-900/80 px-4 py-2.5 backdrop-blur-xl transition-colors duration-300 sm:px-5"
       >
         <Link href="/" className="flex items-center gap-2.5" aria-label="Inicio Linea Brava">
           <LogoMark />
@@ -71,7 +59,7 @@ export function Navbar() {
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="link-underline text-sm font-medium text-mute transition-colors hover:text-bone"
+                className="link-underline text-sm font-medium text-bone transition-colors hover:text-trail-500"
               >
                 {l.label}
               </Link>
@@ -125,7 +113,7 @@ export function Navbar() {
                   <Link
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className="block rounded-xl px-4 py-3 text-base font-medium text-bone hover:bg-ink-800"
+                    className="block rounded-xl px-4 py-3 text-base font-medium text-bone hover:text-trail-500 hover:bg-ink-800"
                   >
                     {l.label}
                   </Link>
