@@ -10,10 +10,10 @@ import LogoMark from "./LogoMark";
 const links = [
   { href: "/rutas",       label: "Rutas" },
   { href: "/eventos",     label: "Eventos" },
+  { href: "/comunidad",   label: "Comunidad" },
   { href: "/tips",        label: "Tips" },
   { href: "/marketplace", label: "Marketplace" },
   { href: "/talleres",    label: "Talleres" },
-  { href: "/foro",        label: "Foro" },
 ];
 
 const providerLinks = [

@@ -2,7 +2,7 @@ const items = [
   "Rutas con tracks GPX",
   "Directorio de talleres off-road",
   "Salidas en grupo para todo nivel",
-  "Foro de la comunidad",
+  "Comunidad off-road",
   "Tips de manejo y equipo",
   "Descubre rutas nuevas",
   "Refacciones y proveedores cerca de ti",

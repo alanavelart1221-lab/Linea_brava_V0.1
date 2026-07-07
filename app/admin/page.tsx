@@ -27,7 +27,7 @@ export default async function AdminPage() {
           </span>
           <h1 className="mt-3 font-display text-5xl text-bone">Centro de control</h1>
           <p className="mt-3 max-w-xl text-mute">
-            Gestiona solicitudes, rutas, tips y el foro de Línea Brava.
+            Gestiona solicitudes, rutas, tips y la comunidad de Línea Brava.
           </p>
         </div>
 
@@ -49,9 +49,9 @@ export default async function AdminPage() {
             description="Crea un nuevo tip para la comunidad off-road."
           />
           <AdminCard
-            href="/foro"
-            title="Moderar foro"
-            description="Cierra o elimina hilos y respuestas desde cada conversación."
+            href="/comunidad"
+            title="Moderar comunidad"
+            description="Elimina publicaciones y respuestas desde cada conversación."
           />
           {esSuperadmin && (
             <AdminCard

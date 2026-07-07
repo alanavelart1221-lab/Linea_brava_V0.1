@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: "/foro", destination: "/comunidad", permanent: true },
+      { source: "/foro/nuevo", destination: "/comunidad", permanent: true },
+      { source: "/foro/:id", destination: "/comunidad/:id", permanent: true },
+    ];
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

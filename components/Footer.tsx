@@ -8,7 +8,7 @@ const columns = [
       { label: "Eventos", href: "/eventos" },
       { label: "Tips", href: "/tips" },
       { label: "Marketplace", href: "/marketplace" },
-      { label: "Foro", href: "/foro" },
+      { label: "Comunidad", href: "/comunidad" },
     ],
   },
   {

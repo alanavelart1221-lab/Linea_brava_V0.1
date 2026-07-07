@@ -1,7 +1,7 @@
 # Línea Brava — Comunidad Off-Road & Overland
 
 Plataforma para la comunidad todoterreno / 4x4 de **México**. Reúne en un solo
-lugar **rutas, eventos, proveedores, foro y tips**, con autenticación y datos en
+lugar **rutas, eventos, proveedores, comunidad y tips**, con autenticación y datos en
 Supabase. Tema oscuro (OLED), acento ámbar y animaciones cuidadas.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black) ![React](https://img.shields.io/badge/React-19-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8) ![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20DB-3ecf8e)
@@ -14,7 +14,7 @@ pesan por igual. Toda la interfaz va en español.
 - **Rutas** — catálogo calificado por dificultad y terreno, con tracks GPX.
 - **Eventos** — salidas en grupo; los miembros crean e inscriben.
 - **Proveedores** — talleres, autopartes y guías (modelo de membresía).
-- **Foro** — hilos, respuestas, likes e imágenes.
+- **Comunidad** — feed estilo X: posts cortos con imágenes, likes y respuestas.
 - **Tips** — guías de manejo, mantenimiento y equipo.
 
 ## Stack
@@ -54,7 +54,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 ```
 
-> Sin estas variables, el login y las secciones que leen de Supabase (foro,
+> Sin estas variables, el login y las secciones que leen de Supabase (comunidad,
 > admin) no funcionan.
 
 ## Configuración de Supabase
@@ -64,7 +64,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 2. **Tablas** usadas por el código actual: `profiles` (con `is_admin`),
    `forum_threads`, `forum_replies`, `forum_thread_likes`, `forum_reply_likes`,
    `user_routes` (con `status` para el flujo de aprobación).
-3. **Storage:** crea el bucket `forum-images` (imágenes del foro).
+3. **Storage:** buckets `forum-images` (legado) y `community-media` (imágenes de la comunidad, se crea con la migración `0018_comunidad.sql`).
 4. Activa **RLS** en cada tabla y define sus políticas.
 
 ## Estructura del proyecto
@@ -78,7 +78,7 @@ app/
   rutas/                  # catálogo, detalle y navegación de rutas
   eventos/                # listado y creación de eventos
   proveedores/            # directorio y planes de membresía
-  foro/                   # hilos, detalle, nuevo hilo (Supabase)
+  comunidad/              # feed estilo X: posts, detalle y respuestas (Supabase)
   tips/                   # tips publicados por admin
   perfil/                 # perfil del usuario
   mis-rutas/grabar/       # grabación de recorrido
@@ -105,7 +105,7 @@ middleware.ts             # refresca la sesión de Supabase
 
 - **Login con Google** vía Supabase (`@supabase/ssr`). El `middleware.ts` refresca
   la sesión y `app/auth/callback/route.ts` cierra el flujo OAuth.
-- **Foro:** funcional contra Supabase (hilos, respuestas, likes e imágenes).
+- **Comunidad:** funcional contra Supabase (posts, respuestas, likes e imágenes).
 - **Admin:** verificación de rol y aprobación de rutas de usuarios.
 - **Datos de ejemplo:** rutas, eventos, stats y proveedores aún viven en
   `lib/data.ts` y `lib/providers.ts`. Pendiente migrarlos a Supabase.
@@ -131,6 +131,6 @@ común nunca paga; la membresía es para proveedores (talleres y autopartes).
 | Listo | Pendiente |
 |-------|-----------|
 | Auth con Google | Migrar datos de ejemplo a Supabase |
-| Foro (Supabase) | Sistema de 3 roles (`rol` + `estado_proveedor`) |
+| Comunidad (Supabase) | Sistema de 3 roles (`rol` + `estado_proveedor`) |
 | Panel de admin + aprobación de rutas | Membresía/cobro a proveedores |
 | Home como plataforma | App móvil (React Native / Flutter) |

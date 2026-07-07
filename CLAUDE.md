@@ -32,7 +32,7 @@ El sitio web complementa la experiencia con:
 - Directorio de proveedores
 - Panel para proveedores
 - Tips
-- Foro
+- Comunidad (feed estilo X)
 - Eventos
 - Administración
 
@@ -76,7 +76,7 @@ Responsabilidades:
 
 - Landing principal.
 - Directorio de proveedores.
-- Foro.
+- Comunidad (feed estilo X).
 - Eventos.
 - Tips.
 - Panel de proveedores.
@@ -193,7 +193,7 @@ No agregar dependencias sin autorización.
 - Login Google mediante Supabase.
 - Middleware de autenticación.
 - Callback OAuth.
-- Foro conectado a Supabase.
+- Comunidad (feed estilo X) conectada a Supabase.
 - Panel administrativo.
 - Flujo de aprobación de rutas.
 

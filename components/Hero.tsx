@@ -84,7 +84,7 @@ export function Hero({ routeCount, stateCount }: { routeCount: number; stateCoun
             className="mt-6 max-w-xl text-base leading-relaxed text-mute sm:text-lg"
           >
             Rutas con tracks GPX, eventos de la comunidad, directorio de talleres y
-            refacciones, foro y tips de manejo. Todo lo que el off-road mexicano necesita,
+            refacciones, comunidad y tips de manejo. Todo lo que el off-road mexicano necesita,
             en un solo lugar.
           </motion.p>
 

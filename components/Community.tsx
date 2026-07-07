@@ -11,7 +11,7 @@ export function Community() {
           <span className="text-trail-500">se cuidan entre sí.</span>
         </h2>
         <p className="mt-5 text-mute">
-          Rutas grabadas por quienes las recorrieron, conocimiento real en el foro y una red
+          Rutas grabadas por quienes las recorrieron, conocimiento real en la comunidad y una red
           de proveedores que te tienen cubierto. Sin filtros, sin agencias — puro terreno.
         </p>
       </Reveal>

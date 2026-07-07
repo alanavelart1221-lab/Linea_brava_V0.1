@@ -38,7 +38,7 @@ export const voices: Voice[] = [
   },
   {
     quote:
-      "Pregunté en el foro si mi 4Runner de agencia aguantaba la ruta a Real de Catorce. En una hora ya tenía cinco respuestas con tips de presión de llanta y todo. Eso no lo da ningún grupo de WhatsApp.",
+      "Pregunté en la comunidad si mi 4Runner de agencia aguantaba la ruta a Real de Catorce. En una hora ya tenía cinco respuestas con tips de presión de llanta y todo. Eso no lo da ningún grupo de WhatsApp.",
     name: "Diego Salas",
     role: "Miembro desde 2022",
     rig: "Toyota 4Runner TRD",
