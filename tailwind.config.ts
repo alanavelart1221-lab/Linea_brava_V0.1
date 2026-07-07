@@ -16,15 +16,15 @@ const config: Config = {
           700: "#1C1E22",
           600: "#26282E",
         },
-        // "Trail" amber — the single bold accent
+        // "Trail" orange — the single bold accent (matches the brand mark)
         trail: {
-          50: "#FFF7ED",
-          200: "#FED7AA",
-          300: "#FDBA74",
-          400: "#FB923C",
-          500: "#F59E0B",
-          600: "#EA8C04",
-          700: "#B45309",
+          50: "#FEF3E8",
+          200: "#FBD0A4",
+          300: "#F9B26D",
+          400: "#F79A42",
+          500: "#F5821F",
+          600: "#DD6C10",
+          700: "#B4540A",
         },
         // "Go" emerald — live/active indicators only
         go: {
@@ -48,7 +48,7 @@ const config: Config = {
         xl2: "1.25rem",
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(245,158,11,0.18), 0 18px 60px -20px rgba(245,158,11,0.35)",
+        glow: "0 0 0 1px rgba(245,130,31,0.18), 0 18px 60px -20px rgba(245,130,31,0.35)",
         lift: "0 24px 70px -30px rgba(0,0,0,0.85)",
       },
       transitionTimingFunction: {

@@ -50,7 +50,7 @@ function Quote() {
     <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M9 7H5a2 2 0 00-2 2v4a2 2 0 002 2h2v2a2 2 0 01-2 2H4m17-12h-4a2 2 0 00-2 2v4a2 2 0 002 2h2v2a2 2 0 01-2 2h-1"
-        stroke="#F59E0B"
+        stroke="#F5821F"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"

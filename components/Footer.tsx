@@ -1,3 +1,5 @@
+import LogoMark from "./LogoMark";
+
 const columns = [
   {
     title: "Explora",
@@ -41,14 +43,9 @@ export function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,0.8fr)]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-trail-500 text-ink-950">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M2 17L8 7l4 6 3-4 5 8H2z" fill="currentColor" fillOpacity="0.92" />
-                  <circle cx="17" cy="6" r="2.2" fill="currentColor" />
-                </svg>
-              </span>
-              <span className="font-display text-xl tracking-tightest text-bone">
-                LINEA BRAVA
+              <LogoMark className="h-8 w-auto text-trail-500" />
+              <span className="font-sans text-lg font-semibold tracking-tight text-bone">
+                Línea Brava
               </span>
             </div>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-mute">

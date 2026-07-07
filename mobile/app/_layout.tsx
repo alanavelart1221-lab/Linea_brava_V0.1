@@ -3,6 +3,7 @@ import { View, ActivityIndicator, AppState } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useFonts, BebasNeue_400Regular } from "@expo-google-fonts/bebas-neue";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { syncPendingActivities } from "@/lib/offline";
@@ -83,6 +84,16 @@ function RootNav() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({ BebasNeue_400Regular });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.ink950, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color={colors.trail500} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <AuthProvider>

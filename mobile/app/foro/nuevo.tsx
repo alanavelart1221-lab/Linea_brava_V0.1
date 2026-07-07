@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   area: { minHeight: 140, textAlignVertical: "top" },
   cats: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   cat: { borderWidth: 1, borderColor: colors.ink600, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  catOn: { borderColor: colors.trail500, backgroundColor: "rgba(245,158,11,0.15)" },
+  catOn: { borderColor: colors.trail500, backgroundColor: "rgba(245,130,31,0.15)" },
   catText: { color: colors.mute, fontWeight: "600" },
   catTextOn: { color: colors.trail400 },
   btn: { backgroundColor: colors.trail500, paddingVertical: 16, borderRadius: 999, alignItems: "center" },

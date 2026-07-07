@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthButton } from "./AuthButton";
 import { CartButton } from "./CartButton";
+import LogoMark from "./LogoMark";
 
 const links = [
   { href: "/rutas",       label: "Rutas" },
@@ -48,9 +49,9 @@ export function Navbar() {
         className="flex w-full max-w-content items-center justify-between rounded-full border border-ink-700 bg-ink-900/80 px-4 py-2.5 backdrop-blur-xl transition-colors duration-300 sm:px-5"
       >
         <Link href="/" className="flex items-center gap-2.5" aria-label="Inicio Linea Brava">
-          <LogoMark />
-          <span className="font-display text-xl tracking-tightest text-bone">
-            LINEA BRAVA
+          <LogoMark className="h-8 w-auto text-trail-500" />
+          <span className="font-sans text-lg font-semibold tracking-tight text-bone">
+            Línea Brava
           </span>
         </Link>
 
@@ -128,43 +129,5 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </header>
-  );
-}
-
-function LogoMark() {
-  return (
-    <svg
-      width="96"
-      height="32"
-      viewBox="0 0 200 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      {/* Left mountain — back layer */}
-      <polyline
-        points="12,60 52,14 84,44"
-        stroke="#F59E0B"
-        strokeWidth="7"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-      {/* Right mountain — middle layer */}
-      <polyline
-        points="116,44 152,16 188,60"
-        stroke="#F59E0B"
-        strokeWidth="7"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-      {/* Center mountain — front layer (tallest) */}
-      <polyline
-        points="72,44 100,4 128,44"
-        stroke="#F59E0B"
-        strokeWidth="7"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }

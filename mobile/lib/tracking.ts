@@ -158,7 +158,7 @@ async function beginUpdates(): Promise<void> {
       foregroundService: {
         notificationTitle: "Línea Brava — grabando ruta",
         notificationBody: "Tu recorrido se está grabando, incluso con la pantalla apagada.",
-        notificationColor: "#F59E0B",
+        notificationColor: "#F5821F",
       },
     });
   } catch {

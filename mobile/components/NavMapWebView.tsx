@@ -110,14 +110,14 @@ export function NavMapWebView({
   new OfflineTileLayer('', { maxZoom: 20, attribution: '© OpenStreetMap © CARTO' }).addTo(map);
 
   if (routeTrack.length > 1) {
-    var rline = L.polyline(routeTrack, { color: '#F59E0B', weight: 4, opacity: 0.9 }).addTo(map);
+    var rline = L.polyline(routeTrack, { color: '#F5821F', weight: 4, opacity: 0.9 }).addTo(map);
     map.fitBounds(rline.getBounds(), { padding: [40, 40] });
   }
 
   wps.forEach(function (w) {
     var icon = L.divIcon({
       className: '',
-      html: '<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#1A1D21;border:2px solid #F59E0B;font-size:14px;">' + w.emoji + '</span>',
+      html: '<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#1A1D21;border:2px solid #F5821F;font-size:14px;">' + w.emoji + '</span>',
       iconSize: [28, 28], iconAnchor: [14, 14]
     });
     L.marker([w.lat, w.lng], { icon: icon }).addTo(map).bindPopup('<b>' + (w.name || '') + '</b>');
@@ -134,14 +134,14 @@ export function NavMapWebView({
   if (endPoint) {
     var endIcon = L.divIcon({
       className: '',
-      html: '<span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:#1A1D21;border:2px solid #F59E0B;font-size:15px;">🏁</span>',
+      html: '<span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:#1A1D21;border:2px solid #F5821F;font-size:15px;">🏁</span>',
       iconSize: [30, 30], iconAnchor: [15, 15]
     });
     L.marker(endPoint, { icon: endIcon }).addTo(map).bindPopup('<b>Fin</b>');
   }
 
   var userLine = L.polyline([], { color: userColor, weight: 5, opacity: 0.95 }).addTo(map);
-  var guideLine = L.polyline([], { color: '#F59E0B', weight: 3, opacity: 0.8, dashArray: '8, 10' }).addTo(map);
+  var guideLine = L.polyline([], { color: '#F5821F', weight: 3, opacity: 0.8, dashArray: '8, 10' }).addTo(map);
   var posMarker = null;
 
   window.setUser = function (t) { userLine.setLatLngs(t); };

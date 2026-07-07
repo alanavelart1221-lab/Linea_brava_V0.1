@@ -22,7 +22,11 @@
       "Bash(xargs -0 grep -l \"create table.*user_routes\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(ls -la \"C:\\\\Users\\\\Usuario\\\\Documents\\\\Linea_Brava2\\\\\" | head -20)"
+      "Bash(ls -la \"C:\\\\Users\\\\Usuario\\\\Documents\\\\Linea_Brava2\\\\\" | head -20)",
+      "PowerShell(npx tsc --noEmit)",
+      "Bash(node -e \"console.log\\(require\\('C:/Users/Usuario/Documents/Linea_Brava2/node_modules/sharp/package.json'\\).version\\)\")",
+      "mcp__visualize__read_me",
+      "mcp__visualize__show_widget"
     ]
   },
   "enableAllProjectMcpServers": true,

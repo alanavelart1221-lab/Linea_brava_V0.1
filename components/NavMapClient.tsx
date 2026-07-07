@@ -38,7 +38,7 @@ export default function NavMapClient({ track, center, userPosition, name }: Prop
 
     // Route polyline
     if (track.length > 1) {
-      L.polyline(track, { color: "#F59E0B", weight: 4, opacity: 0.9 }).addTo(map);
+      L.polyline(track, { color: "#F5821F", weight: 4, opacity: 0.9 }).addTo(map);
 
       // Start marker
       L.circleMarker(track[0], {

@@ -2,13 +2,14 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Image,
   Pressable,
   StyleSheet,
   Alert,
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
@@ -65,10 +66,10 @@ export default function Login() {
       <SafeAreaView style={styles.safe}>
         {/* Logo discreto */}
         <View style={styles.logoRow}>
-          <MaterialCommunityIcons
-            name="image-filter-hdr"
-            size={32}
-            color={colors.trail500}
+          <Image
+            source={require("../assets/brand/logo.png")}
+            style={{ width: 56, height: 17 }}
+            resizeMode="contain"
           />
           <Text style={styles.wordmark}>LÍNEA BRAVA</Text>
         </View>
@@ -135,8 +136,8 @@ const styles = StyleSheet.create({
   logoRow: { alignItems: "center", marginTop: 24, gap: 6 },
   wordmark: {
     color: colors.trail500,
-    fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "BebasNeue_400Regular",
+    fontSize: 18,
     letterSpacing: 3,
   },
 
