@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 
@@ -68,9 +68,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Actualizar la orden en Supabase usando la RPC que también notifica al proveedor
+  // Actualizar la orden en Supabase usando la RPC que también notifica al proveedor.
+  // Se usa el cliente service_role: la RPC está restringida a ese rol (migración 0016)
+  // y este webhook llega desde Mercado Pago, sin sesión de usuario.
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  if (!serviceRoleKey) {
+    console.error("SUPABASE_SERVICE_ROLE_KEY no configurada; no se pudo confirmar la orden", payment.external_reference);
+    return NextResponse.json({ ok: true });
+  }
+
   try {
-    const supabase = await createClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      serviceRoleKey,
+      { auth: { persistSession: false } }
+    );
     await supabase.rpc("confirm_order_payment", {
       p_order_id:      payment.external_reference,
       p_mp_payment_id: String(paymentId),

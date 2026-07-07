@@ -1,87 +1,136 @@
-# Linea Brava — Off-Road & Overland Community
+# Línea Brava — Comunidad Off-Road & Overland
 
-A premium, cinematic landing site for an off-road community built around **trail meetups and events**. Dark, photographic, and motion-rich — engineered to load fast on any device.
+Plataforma para la comunidad todoterreno / 4x4 de **México**. Reúne en un solo
+lugar **rutas, eventos, proveedores, foro y tips**, con autenticación y datos en
+Supabase. Tema oscuro (OLED), acento ámbar y animaciones cuidadas.
 
-![Stack](https://img.shields.io/badge/Next.js-15-black) ![Stack](https://img.shields.io/badge/React-19-blue) ![Stack](https://img.shields.io/badge/Tailwind-3.4-38bdf8) ![Stack](https://img.shields.io/badge/Framer_Motion-11-ff0080)
+![Next.js](https://img.shields.io/badge/Next.js-15-black) ![React](https://img.shields.io/badge/React-19-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8) ![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20DB-3ecf8e)
 
-## Quick start
+## Qué es
+
+Una **plataforma funcional balanceada** (no una landing): las cinco secciones
+pesan por igual. Toda la interfaz va en español.
+
+- **Rutas** — catálogo calificado por dificultad y terreno, con tracks GPX.
+- **Eventos** — salidas en grupo; los miembros crean e inscriben.
+- **Proveedores** — talleres, autopartes y guías (modelo de membresía).
+- **Foro** — hilos, respuestas, likes e imágenes.
+- **Tips** — guías de manejo, mantenimiento y equipo.
+
+## Stack
+
+| Área | Elección |
+|------|----------|
+| Framework | Next.js 15 (App Router) |
+| UI | React 19 + TypeScript |
+| Estilos | Tailwind CSS 3 (tokens en `tailwind.config.ts` y `app/globals.css`) |
+| Animación | Framer Motion 11 (respeta `prefers-reduced-motion`) |
+| Backend | Supabase — auth, base de datos y storage (`@supabase/ssr`) |
+| Mapas | Leaflet + react-leaflet |
+| Fuentes | next/font — Bebas Neue (títulos) + Sora (cuerpo) |
+
+## Arranque rápido
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+cp .env.local.example .env.local   # y rellena tus llaves de Supabase
+npm run dev                        # http://localhost:3000
 ```
 
-Other scripts:
+Otros scripts:
 
 ```bash
-npm run build      # production build
-npm run start      # serve the production build
+npm run build      # build de producción
+npm run start      # sirve el build
 npm run lint       # eslint
 ```
 
-## Tech stack
+## Variables de entorno
 
-| Concern | Choice | Why |
-|--------|--------|-----|
-| Framework | **Next.js 15** (App Router) | Static pre-rendering, image optimization, room to grow into auth/CMS/forum later |
-| UI | **React 19 + TypeScript** | Component model, type safety |
-| Styling | **Tailwind CSS 3** | Design tokens in `tailwind.config.ts`, zero runtime CSS |
-| Motion | **Framer Motion 11** | Scroll reveals, parallax, count-ups — all reduced-motion aware |
-| Fonts | **next/font** (Bebas Neue + Sora) | Self-hosted, no layout shift, no render-blocking |
+Crea `.env.local` en la raíz con tus credenciales de Supabase:
 
-## Design system
+```
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+```
 
-Generated and refined with the `ui-ux-pro-max` skill, then tuned for an off-road brand.
+> Sin estas variables, el login y las secciones que leen de Supabase (foro,
+> admin) no funcionan.
 
-- **Pattern:** Event/Conference landing — hero w/ countdown → trails → schedule → community proof → join CTA
-- **Style:** OLED-leaning dark (excellent performance, WCAG-grade contrast)
-- **Color:** Deep charcoal base (`ink`), single bold **trail amber** accent (`#F59E0B`), emerald (`go`) reserved for live/active states only
-- **Type:** Bebas Neue (display) + Sora (body) — bold and premium, built for adventure/event copy
-- **Motion:** Cinematic but disciplined — 1–2 animated elements per view, `transform`/`opacity` only, `ease-out` curves
+## Configuración de Supabase
 
-All tokens live in [`tailwind.config.ts`](tailwind.config.ts) and [`app/globals.css`](app/globals.css).
+1. **Auth → Providers:** habilita **Google** y agrega como redirect URL
+   `http://localhost:3000/auth/callback` (y la de producción cuando despliegues).
+2. **Tablas** usadas por el código actual: `profiles` (con `is_admin`),
+   `forum_threads`, `forum_replies`, `forum_thread_likes`, `forum_reply_likes`,
+   `user_routes` (con `status` para el flujo de aprobación).
+3. **Storage:** crea el bucket `forum-images` (imágenes del foro).
+4. Activa **RLS** en cada tabla y define sus políticas.
 
-## Performance & accessibility
-
-- **Fully static** — the home route pre-renders to HTML (~154 kB first-load JS).
-- **`prefers-reduced-motion`** honored globally (CSS) and per-component (Framer's `useReducedMotion`): parallax, count-ups, and reveals degrade to static/fade.
-- **Images** use `next/image` (AVIF/WebP, responsive `sizes`, lazy by default; hero is `priority`).
-- **Keyboard-friendly:** visible focus rings, skip-to-content link, `aria` labels on icon buttons, labelled form input.
-- **Textures** (topographic contours, film grain) are inline SVG data-URIs — no extra network requests.
-
-## Project structure
+## Estructura del proyecto
 
 ```
 app/
-  layout.tsx        # fonts, metadata, viewport, skip link
-  page.tsx          # section composition
-  globals.css       # tokens, textures, reduced-motion guard
-components/
-  Navbar.tsx        # floating nav, scroll-aware, mobile drawer
-  Hero.tsx          # parallax backdrop + staggered headline + countdown
-  Countdown.tsx     # live ticking timer (hydration-safe)
-  Marquee.tsx       # infinite value-prop strip
-  Stats.tsx         # animated count-up metrics
-  CountUp.tsx       # rAF count-up, fires on scroll-in
-  FeaturedTrails.tsx# graded trail cards w/ photos + specs
-  Events.tsx        # schedule with availability bars
-  Community.tsx     # member testimonials
-  Faq.tsx           # animated accordion
-  JoinCTA.tsx       # email capture w/ validation + success state
-  Footer.tsx        # links, socials
-  Reveal.tsx        # scroll-reveal + stagger helpers
+  layout.tsx              # fuentes, metadata, layout base
+  page.tsx                # composición de la home (plataforma)
+  globals.css             # tokens, texturas, guard de reduced-motion
+  auth/callback/route.ts  # intercambio del código OAuth de Google
+  rutas/                  # catálogo, detalle y navegación de rutas
+  eventos/                # listado y creación de eventos
+  proveedores/            # directorio y planes de membresía
+  foro/                   # hilos, detalle, nuevo hilo (Supabase)
+  tips/                   # tips publicados por admin
+  perfil/                 # perfil del usuario
+  mis-rutas/grabar/       # grabación de recorrido
+  admin/                  # panel de admin (rutas y tips), con rol
+components/               # UI reutilizable (Navbar, Hero, ExploreHub, etc.)
 lib/
-  data.ts           # trails, events, stats, voices, faqs (edit me)
-  date.ts           # deterministic date formatting (no hydration drift)
+  supabase/server.ts      # cliente Supabase (servidor)
+  supabase/client.ts      # cliente Supabase (navegador)
+  data.ts                 # DATOS DE EJEMPLO: rutas, eventos, stats
+  providers.ts            # DATOS DE EJEMPLO: proveedores
+  date.ts                 # formato de fechas sin hydration drift
+middleware.ts             # refresca la sesión de Supabase
 ```
 
-## Customizing
+## Composición de la home
 
-- **Content:** everything is in [`lib/data.ts`](lib/data.ts) — trails, events, stats, testimonials, FAQs. The hero countdown reads `NEXT_RUN_ISO`.
-- **Photos:** currently pulled from Unsplash via `next/image` (allow-listed in [`next.config.mjs`](next.config.mjs)). Swap the `image` URLs in `lib/data.ts` / `Hero.tsx` for your own — drop files in `public/` and reference `/your-photo.jpg`.
-- **Brand color:** change the `trail` palette in [`tailwind.config.ts`](tailwind.config.ts) to re-skin the whole site.
-- **Join form:** [`JoinCTA.tsx`](components/JoinCTA.tsx) validates client-side and shows a success state. Wire `onSubmit` to your email provider / CRM (e.g. a Next.js route handler or a service like Resend/Mailchimp).
+`Hero` → `ExploreHub` (las 5 secciones con peso igual) → `FeaturedTrails` →
+`Events` → `FeaturedTip` → `ForProviders` → `Footer`.
 
-## Notes
+> Los componentes de la landing anterior (`Marquee`, `Stats`, `Community`,
+> `Faq`, `JoinCTA`) siguen en `components/` pero ya no se usan en la home.
 
-- Images depend on a network connection to Unsplash in dev. Replace with local assets in `public/` for a fully offline/self-hosted build.
+## Autenticación y datos
+
+- **Login con Google** vía Supabase (`@supabase/ssr`). El `middleware.ts` refresca
+  la sesión y `app/auth/callback/route.ts` cierra el flujo OAuth.
+- **Foro:** funcional contra Supabase (hilos, respuestas, likes e imágenes).
+- **Admin:** verificación de rol y aprobación de rutas de usuarios.
+- **Datos de ejemplo:** rutas, eventos, stats y proveedores aún viven en
+  `lib/data.ts` y `lib/providers.ts`. Pendiente migrarlos a Supabase.
+
+## Roles (diseño objetivo)
+
+Hoy el código usa un booleano `is_admin`. El diseño hacia el que se va a migrar:
+un enum `rol` (`usuario` / `proveedor` / `admin`) en `profiles`, más
+`estado_proveedor` (`pendiente` / `aprobado`), todo protegido con RLS. El usuario
+común nunca paga; la membresía es para proveedores (talleres y autopartes).
+
+## Personalización
+
+- **Contenido de ejemplo:** edita `lib/data.ts` y `lib/providers.ts`.
+- **Color de marca:** cambia la paleta `trail` en `tailwind.config.ts` para
+  re-skinear todo el sitio.
+- **Imágenes:** por ahora se usan placeholders de Unsplash (dominios permitidos
+  en `next.config.mjs`). Reemplázalas por archivos en `public/` y referencia
+  `/tu-foto.jpg`.
+
+## Estado actual
+
+| Listo | Pendiente |
+|-------|-----------|
+| Auth con Google | Migrar datos de ejemplo a Supabase |
+| Foro (Supabase) | Sistema de 3 roles (`rol` + `estado_proveedor`) |
+| Panel de admin + aprobación de rutas | Membresía/cobro a proveedores |
+| Home como plataforma | App móvil (React Native / Flutter) |

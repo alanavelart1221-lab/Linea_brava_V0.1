@@ -1,90 +1,269 @@
-# Línea Brava — Contexto del proyecto
+  # CLAUDE.md
 
-Este archivo le da a Claude Code el contexto permanente del proyecto. Léelo
-al inicio de cada sesión y respétalo. Si algo aquí entra en conflicto con una
-petición puntual, avísame antes de proceder.
+# Línea Brava — Contexto permanente del proyecto
 
-## Qué es Línea Brava
+> Este archivo proporciona el contexto permanente del proyecto para Claude Code.
+> Antes de implementar cambios, léelo completo.
 
-Plataforma para la comunidad off-road / 4x4 en **México**. Reúne en un solo
-lugar: **rutas, eventos, proveedores (talleres y autopartes), foro y tips**.
-Toda la interfaz va **en español**. Producto desarrollado por una sola persona.
+---
 
-Es una **plataforma funcional balanceada**, no una landing de marketing: las
-cinco secciones (rutas, eventos, proveedores, foro, tips) pesan por igual.
+# Visión del proyecto
 
-## Stack
+Línea Brava es un ecosistema digital para la comunidad Off-Road de México.
 
-- **Next.js 15** (App Router) + **React 19** + **TypeScript**
-- **Tailwind CSS 3** (tokens en `tailwind.config.ts` y `app/globals.css`)
-- **Framer Motion 11** para animaciones
-- **Supabase** (base de datos, auth y storage) vía `@supabase/ssr`
-- **Leaflet / react-leaflet** para mapas (web)
+Está compuesto por:
 
-No agregues dependencias nuevas sin preguntarme primero.
+- Sitio web
+- Aplicación móvil
+- Canal de YouTube
+- Comunidad
+- Plataforma de proveedores
 
-## Estructura
+El objetivo es crear la comunidad Off-Road más completa de México y conectar usuarios con proveedores especializados.
 
-- `app/` — rutas del App Router. Server Components por defecto; usa
-  `"use client"` solo cuando de verdad se necesite (estado, efectos, eventos).
-- `components/` — componentes de UI reutilizables.
-- `lib/` — utilidades y datos. Supabase en `lib/supabase/server.ts` (servidor)
-  y `lib/supabase/client.ts` (cliente).
-- `lib/data.ts` y `lib/providers.ts` — **datos de ejemplo (placeholder)** de
-  rutas, eventos, stats y proveedores. Pendiente migrarlos a Supabase.
+---
 
-## Lo que YA funciona — NO romper
+# Objetivo del producto
 
-Trata estas áreas con cuidado; no las refactorices salvo que te lo pida explícito:
+La aplicación móvil es el principal gancho para atraer usuarios.
 
-- **Login con Google (Supabase):** `lib/supabase/server.ts`,
-  `lib/supabase/client.ts`, `middleware.ts` y `app/auth/callback/route.ts`.
-  El middleware refresca la sesión — no quites esa llamada.
-- **Foro:** `app/foro/**` y `app/foro/actions.ts`. Escribe de verdad a Supabase
-  (tablas `forum_threads`, `forum_replies`, `forum_thread_likes`,
-  `forum_reply_likes`; bucket de storage `forum-images`).
-- **Panel de admin:** `app/admin/**`, con verificación de rol y flujo de
-  aprobación de rutas (`user_routes` con `status`).
+El sitio web complementa la experiencia con:
 
-## Sistema de diseño (respétalo siempre)
+- Directorio de proveedores
+- Panel para proveedores
+- Tips
+- Foro
+- Eventos
+- Administración
 
-Colores (en `tailwind.config.ts`) — nunca uses hex sueltos, usa los tokens:
+Los usuarios nunca pagan.
 
-- `ink-*` — base oscura (fondos).
-- `trail-*` — ámbar, **único acento** (CTAs, detalles).
-- `go-*` — esmeralda, **solo** para estados en vivo/activos.
-- `bone` — texto principal. `mute` — texto secundario.
+Los proveedores pagan una suscripción de $500 MXN mensuales después de un periodo promocional de 2 meses gratuitos.
 
-Tipografía: `font-display` (Bebas Neue) para títulos, `font-sans` (Sora) para
-cuerpo. `h1`–`h3` ya reciben la display por base; no la reasignes.
+---
 
-Clases utilitarias propias (en `app/globals.css`): `.shell` (contenedor),
-`.eyebrow`, `.card-line` (tarjetas), `.btn-primary`, `.btn-ghost`,
-`.input-field`, `.link-underline`, `.topo`, `.grain`.
+# Estado del proyecto
 
-Animaciones: usa los wrappers `Reveal` / `RevealGroup` de `components/Reveal.tsx`.
-Respeta siempre `prefers-reduced-motion` (esos wrappers ya lo hacen).
+El proyecto se encuentra en etapa MVP.
 
-## Reglas de trabajo
+No todas las funcionalidades están definidas.
 
-- **Haz cambios mínimos y acotados.** No refactorices código no relacionado ni
-  toques archivos que no te pedí.
-- **Muéstrame un plan o el diff antes** de cambios amplios o de varios archivos.
-- Cuando dudes entre dos enfoques, explícame ambos y déjame elegir; no decidas
-  arquitectura por tu cuenta.
-- Sigue las convenciones y tokens existentes; que lo nuevo se vea igual a lo que ya hay.
-- Mantén todo el texto de UI **en español**.
-- Corre `npm run build` (o el typecheck) después de cambiar código cuando se pueda.
+Cuando exista incertidumbre:
 
-## Decisiones tomadas (no las revivas sin avisar)
+- Proponer alternativas.
+- Explicar ventajas y desventajas.
+- No asumir arquitectura definitiva.
 
-- **Roles:** el diseño objetivo es un enum `rol` (`usuario` / `proveedor` /
-  `admin`) en la tabla `profiles`, más `estado_proveedor` (`pendiente` /
-  `aprobado`). El código actual usa solo un booleano `is_admin`; al implementar
-  roles, migra hacia el diseño objetivo y protege todo con **RLS** en Supabase.
-- **Monetización:** membresía a **proveedores** (talleres y autopartes); los
-  usuarios comunes nunca pagan. Gratis al inicio, cobro después.
-- **Mapas:** Leaflet sirve para la web por ahora. **Mapbox** es la elección para
-  el objetivo offline de la app; **no cambies Leaflet por otra cosa** sin pedírtelo.
-- **App móvil:** se hará después (React Native o Flutter), reusando este backend
-  de Supabase. Por ahora el repo es solo la web.
+Siempre priorizar simplicidad.
+
+---
+
+# Público objetivo
+
+Usuarios de vehículos 4x4, Overlanding, Side by Side y ATV.
+
+Muchos utilizan la aplicación sin cobertura celular.
+
+La aplicación debe diseñarse bajo una filosofía **Offline First**.
+
+---
+
+# Ecosistema
+
+## Sitio web
+
+Responsabilidades:
+
+- Landing principal.
+- Directorio de proveedores.
+- Foro.
+- Eventos.
+- Tips.
+- Panel de proveedores.
+- Panel administrativo.
+
+Debe incentivar constantemente la descarga de la aplicación.
+
+## Aplicación móvil
+
+Es el corazón del ecosistema.
+
+Debe permitir:
+
+- Descubrir rutas.
+- Descargar rutas.
+- Navegación GPS.
+- Mapas offline.
+- Grabar recorridos.
+- Convertir recorridos en rutas.
+- Crear waypoints personalizados.
+- Fotografías.
+- Notas.
+- Sincronización cuando exista Internet.
+
+La sección Tips permanece únicamente en la web.
+
+## YouTube
+
+Genera tráfico hacia la plataforma.
+
+Los videos pueden ser creados utilizando IA.
+
+---
+
+# Sistema de rutas
+
+Existen:
+
+- Rutas de la comunidad.
+- Rutas verificadas.
+
+Los usuarios pueden:
+
+- Descargar.
+- Navegar.
+- Calificar.
+- Comentar.
+
+Las rutas verificadas son aprobadas por administradores considerando calidad y calificaciones.
+
+---
+
+# Proveedores
+
+Cada proveedor dispone de un panel privado.
+
+Debe poder administrar:
+
+- Información.
+- Productos.
+- Servicios.
+- Fotografías.
+- Contacto.
+
+## Importación automática
+
+Objetivo importante del proyecto:
+
+Evitar capturar manualmente cientos de productos.
+
+Siempre explorar integraciones con:
+
+- Amazon
+- Mercado Libre
+- Shopify
+- WooCommerce
+- Sitios propios
+
+Si no existe integración, permitir captura manual.
+
+---
+
+# Filosofía de diseño
+
+La plataforma debe sentirse:
+
+- Moderna.
+- Premium.
+- Minimalista.
+- Rápida.
+
+Nunca saturar pantallas.
+
+Menos es más.
+
+---
+
+# Stack
+
+- Next.js 15
+- React 19
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Supabase
+- Leaflet (web)
+
+No agregar dependencias sin autorización.
+
+---
+
+# Lo que YA funciona (NO romper)
+
+- Login Google mediante Supabase.
+- Middleware de autenticación.
+- Callback OAuth.
+- Foro conectado a Supabase.
+- Panel administrativo.
+- Flujo de aprobación de rutas.
+
+No refactorizar estas áreas sin autorización.
+
+---
+
+# Sistema de diseño
+
+Utilizar exclusivamente:
+
+- ink-*
+- trail-*
+- go-*
+- bone
+- mute
+
+No utilizar colores HEX directamente.
+
+Tipografías:
+
+- font-display
+- font-sans
+
+---
+
+# Reglas de trabajo
+
+- Cambios pequeños.
+- No modificar archivos no relacionados.
+- Mostrar un plan antes de cambios grandes.
+- Mantener toda la interfaz en español.
+- Ejecutar build o typecheck cuando sea posible.
+
+---
+
+# Filosofía de desarrollo
+
+El proyecto es desarrollado por una sola persona.
+
+Priorizar:
+
+1. Simplicidad.
+2. Mantenibilidad.
+3. Legibilidad.
+4. MVP antes que perfección.
+
+No realizar sobreingeniería.
+
+---
+
+# Cómo debe pensar Claude
+
+Antes de implementar una funcionalidad:
+
+- Pensar como Product Manager.
+- Pensar como desarrollador senior.
+- Proponer mejoras cuando agreguen valor.
+- No cambiar arquitectura sin preguntar.
+- Explicar ventajas y desventajas cuando existan varias alternativas.
+
+---
+
+# Decisiones pendientes
+
+Todavía NO están definidas completamente:
+
+- Marketplace definitivo.
+- Sincronización automática de inventarios.
+- Roadmap de eventos.
+- Funciones premium futuras.
+
+No asumir decisiones definitivas.
