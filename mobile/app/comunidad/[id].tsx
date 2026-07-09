@@ -26,8 +26,10 @@ import {
   type Post,
   type PostReply,
 } from "@/lib/comunidad";
+import { extractVideoEmbed } from "@/lib/videoEmbed";
 import { Avatar } from "@/components/comunidad/Avatar";
 import { MediaGrid } from "@/components/comunidad/MediaGrid";
+import { VideoEmbed } from "@/components/comunidad/VideoEmbed";
 
 export default function Publicacion() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -109,6 +111,8 @@ export default function Publicacion() {
     );
   }
 
+  const postVideo = extractVideoEmbed(post.body ?? "");
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -128,7 +132,8 @@ export default function Publicacion() {
               <Text style={styles.time}>{relativeTime(post.created_at)}</Text>
             </View>
           </View>
-          {!!post.body && <Text style={styles.postBody}>{post.body}</Text>}
+          {!!postVideo.text && <Text style={styles.postBody}>{postVideo.text}</Text>}
+          {postVideo.embedUrl && <VideoEmbed embedUrl={postVideo.embedUrl} />}
           <MediaGrid imageUrls={post.image_urls} />
           <View style={styles.footer}>
             <Pressable
@@ -153,7 +158,9 @@ export default function Publicacion() {
             {replies.length} {replies.length === 1 ? "respuesta" : "respuestas"}
           </Text>
         )}
-        {replies.map((r) => (
+        {replies.map((r) => {
+          const replyVideo = extractVideoEmbed(r.body ?? "");
+          return (
           <View key={r.id} style={styles.card}>
             <View style={styles.headerRow}>
               <Avatar name={r.author_name} avatarUrl={r.author_avatar} size="sm" />
@@ -165,7 +172,8 @@ export default function Publicacion() {
                 <Text style={styles.time}>{relativeTime(r.created_at)}</Text>
               </View>
             </View>
-            {!!r.body && <Text style={styles.replyBody}>{r.body}</Text>}
+            {!!replyVideo.text && <Text style={styles.replyBody}>{replyVideo.text}</Text>}
+            {replyVideo.embedUrl && <VideoEmbed embedUrl={replyVideo.embedUrl} />}
             <MediaGrid imageUrls={r.image_urls} />
             <View style={styles.footer}>
               <Pressable
@@ -184,7 +192,8 @@ export default function Publicacion() {
               </Pressable>
             </View>
           </View>
-        ))}
+          );
+        })}
 
         {/* Responder */}
         {session ? (

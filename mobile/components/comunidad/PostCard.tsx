@@ -4,8 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/lib/theme";
 import { relativeTime } from "@/lib/relativeTime";
 import { togglePostLike, type Post } from "@/lib/comunidad";
+import { extractVideoEmbed } from "@/lib/videoEmbed";
 import { Avatar } from "./Avatar";
 import { MediaGrid } from "./MediaGrid";
+import { VideoEmbed } from "./VideoEmbed";
 
 type Props = {
   post: Post;
@@ -17,6 +19,7 @@ export function PostCard({ post, userId, onPress }: Props) {
   const [liked, setLiked] = useState(post.user_liked);
   const [count, setCount] = useState(post.like_count);
   const [busy, setBusy] = useState(false);
+  const { embedUrl, text } = extractVideoEmbed(post.body ?? "");
 
   async function onLike() {
     if (!userId || busy) return;
@@ -49,9 +52,12 @@ export function PostCard({ post, userId, onPress }: Props) {
             <Text style={styles.time}>{relativeTime(post.created_at)}</Text>
           </View>
         </View>
-        {!!post.body && <Text style={styles.body}>{post.body}</Text>}
+        {!!text && <Text style={styles.body}>{text}</Text>}
         <MediaGrid imageUrls={post.image_urls} />
       </Pressable>
+
+      {/* Fuera del Pressable para que tocar el video no navegue al detalle */}
+      {embedUrl && <VideoEmbed embedUrl={embedUrl} />}
 
       <View style={styles.footer}>
         <Pressable

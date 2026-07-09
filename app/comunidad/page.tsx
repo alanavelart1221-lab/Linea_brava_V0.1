@@ -4,9 +4,11 @@ import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { createClient } from "@/lib/supabase/server";
 import { relativeTime } from "@/lib/relativeTime";
+import { extractVideoEmbed } from "@/lib/videoEmbed";
 import { Composer } from "./Composer";
 import { SignInCard } from "./SignInCard";
 import { MediaGrid } from "./MediaGrid";
+import { VideoEmbed } from "./VideoEmbed";
 import { Avatar } from "./Avatar";
 import { LikeButton } from "./[id]/LikeButton";
 import { togglePostLike } from "./actions";
@@ -109,6 +111,7 @@ export default async function ComunidadPage({
             <div className="flex flex-col gap-3">
               {posts.map((p) => {
                 const boundToggleLike = togglePostLike.bind(null, p.id);
+                const { embedUrl, text } = extractVideoEmbed(p.body);
                 return (
                   <article
                     key={p.id}
@@ -127,13 +130,16 @@ export default async function ComunidadPage({
                           </span>
                         </div>
                       </div>
-                      {p.body && (
+                      {text && (
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-bone/90">
-                          {p.body}
+                          {text}
                         </p>
                       )}
                       <MediaGrid imageUrls={p.image_urls} compact />
                     </Link>
+
+                    {/* Fuera del Link para que el video se pueda reproducir sin navegar */}
+                    {embedUrl && <VideoEmbed embedUrl={embedUrl} />}
 
                     <div className="mt-4 flex items-center gap-3 border-t border-ink-700 pt-3">
                       <LikeButton

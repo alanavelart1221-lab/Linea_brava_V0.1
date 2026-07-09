@@ -3,26 +3,17 @@ import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { TipsGrid } from "@/components/TipsGrid";
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/auth";
 
 export const revalidate = 60;
 
 export default async function TipsPage() {
   const supabase = await createClient();
 
-  const [{ data: tips }, { data: { user } }] = await Promise.all([
+  const [{ data: tips }, admin] = await Promise.all([
     supabase.from("tips").select("*").order("created_at", { ascending: false }),
-    supabase.auth.getUser(),
+    isAdmin(),
   ]);
-
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("rol")
-      .eq("id", user.id)
-      .single();
-    isAdmin = profile?.rol === "admin";
-  }
 
   return (
     <>
@@ -41,7 +32,7 @@ export default async function TipsPage() {
             </p>
           </Reveal>
 
-          <TipsGrid tips={tips ?? []} isAdmin={isAdmin} />
+          <TipsGrid tips={tips ?? []} isAdmin={admin} />
         </div>
       </main>
       <Footer />

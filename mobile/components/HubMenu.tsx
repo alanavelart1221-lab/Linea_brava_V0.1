@@ -22,7 +22,6 @@ const GRID_ITEMS: HubItem[] = [
   { key: "eventos", label: "Eventos", blurb: "Próximas salidas", icon: "calendar", route: "/eventos" },
   { key: "marketplace", label: "Marketplace", blurb: "Equipo y accesorios", icon: "cart", route: "/marketplace" },
   { key: "talleres", label: "Talleres", blurb: "Servicios 4×4", icon: "construct", route: "/talleres" },
-  { key: "proveedores", label: "Proveedores", blurb: "Directorio 4×4", icon: "storefront", route: "/(tabs)/proveedores" },
   { key: "perfil", label: "Perfil", blurb: "Tu cuenta", icon: "person-circle", route: "/(tabs)/perfil" },
 ];
 

@@ -9,8 +9,10 @@ import { ReplyForm } from "./ReplyForm";
 import { LikeButton } from "./LikeButton";
 import { DeleteReplyButton } from "./DeleteReplyButton";
 import { DeletePostButton } from "./DeletePostButton";
+import { extractVideoEmbed } from "@/lib/videoEmbed";
 import { SignInCard } from "../SignInCard";
 import { MediaGrid } from "../MediaGrid";
+import { VideoEmbed } from "../VideoEmbed";
 import { Avatar } from "../Avatar";
 import { togglePostLike, toggleReplyLike } from "../actions";
 
@@ -87,6 +89,7 @@ export default async function PostPage({
 
   const postLikeCount = post.likes?.[0]?.count ?? 0;
   const boundTogglePostLike = togglePostLike.bind(null, id);
+  const postVideo = extractVideoEmbed(post.body ?? "");
 
   return (
     <>
@@ -122,11 +125,12 @@ export default async function PostPage({
                 </span>
               </div>
             </div>
-            {post.body && (
+            {postVideo.text && (
               <p className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-bone/90">
-                {post.body}
+                {postVideo.text}
               </p>
             )}
+            {postVideo.embedUrl && <VideoEmbed embedUrl={postVideo.embedUrl} />}
             <MediaGrid imageUrls={post.image_urls ?? []} />
             <div className="mt-6 flex items-center justify-between border-t border-ink-700 pt-4">
               <div className="flex items-center gap-3">
@@ -152,6 +156,7 @@ export default async function PostPage({
               <div className="flex flex-col gap-4">
                 {replies.map((r) => {
                   const boundToggleReplyLike = toggleReplyLike.bind(null, r.id, id);
+                  const replyVideo = extractVideoEmbed(r.body);
                   return (
                     <div key={r.id} className="card-line p-5 sm:p-6">
                       <div className="flex items-center gap-3">
@@ -166,11 +171,12 @@ export default async function PostPage({
                           </span>
                         </div>
                       </div>
-                      {r.body && (
+                      {replyVideo.text && (
                         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-bone/90">
-                          {r.body}
+                          {replyVideo.text}
                         </p>
                       )}
+                      {replyVideo.embedUrl && <VideoEmbed embedUrl={replyVideo.embedUrl} />}
                       <MediaGrid imageUrls={r.image_urls} compact />
                       <div className="mt-4 flex items-center justify-between border-t border-ink-700 pt-3">
                         <LikeButton

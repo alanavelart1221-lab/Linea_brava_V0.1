@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { getEmbedUrl } from "@/lib/videoEmbed";
+import { subirTipAComunidad } from "@/app/admin/tips/actions";
 
 export interface Tip {
   id: string;
@@ -15,14 +17,6 @@ export interface Tip {
 }
 
 const CATEGORIES = ["Todos", "Mecánica", "Equipo", "Navegación", "Seguridad", "General"];
-
-function getEmbedUrl(url: string): string | null {
-  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
-  const vimeo = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
-  return null;
-}
 
 export function TipsGrid({ tips, isAdmin }: { tips: Tip[]; isAdmin: boolean }) {
   const [cat, setCat] = useState("Todos");
@@ -71,7 +65,7 @@ export function TipsGrid({ tips, isAdmin }: { tips: Tip[]; isAdmin: boolean }) {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((tip) => (
-            <TipCard key={tip.id} tip={tip} />
+            <TipCard key={tip.id} tip={tip} isAdmin={isAdmin} />
           ))}
         </div>
       )}
@@ -79,10 +73,19 @@ export function TipsGrid({ tips, isAdmin }: { tips: Tip[]; isAdmin: boolean }) {
   );
 }
 
-function TipCard({ tip }: { tip: Tip }) {
+function TipCard({ tip, isAdmin }: { tip: Tip; isAdmin: boolean }) {
   const [expanded, setExpanded] = useState(false);
+  const [shareState, setShareState] = useState<"idle" | "done" | "error">("idle");
+  const [pending, startTransition] = useTransition();
   const embedUrl = tip.video_url ? getEmbedUrl(tip.video_url) : null;
   const short = tip.body.length > 180;
+
+  function handleShare() {
+    startTransition(async () => {
+      const { error } = await subirTipAComunidad(tip.id);
+      setShareState(error ? "error" : "done");
+    });
+  }
 
   return (
     <article className="card-line flex flex-col overflow-hidden transition-colors hover:border-ink-600">
@@ -124,6 +127,29 @@ function TipCard({ tip }: { tip: Tip }) {
           >
             {expanded ? "Ver menos" : "Ver más"}
           </button>
+        )}
+        {isAdmin && (
+          <div className="mt-auto border-t border-ink-700 pt-3">
+            <button
+              onClick={handleShare}
+              disabled={pending || shareState === "done"}
+              className={`w-full rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
+                shareState === "done"
+                  ? "border-go-500/40 text-go-400"
+                  : shareState === "error"
+                    ? "border-trail-500/40 text-trail-400"
+                    : "border-ink-600 text-mute hover:border-trail-400 hover:text-trail-400"
+              } disabled:cursor-default`}
+            >
+              {pending
+                ? "Subiendo…"
+                : shareState === "done"
+                  ? "Publicado en comunidad ✓"
+                  : shareState === "error"
+                    ? "Error, intenta de nuevo"
+                    : "Subir a comunidad"}
+            </button>
+          </div>
         )}
       </div>
     </article>
