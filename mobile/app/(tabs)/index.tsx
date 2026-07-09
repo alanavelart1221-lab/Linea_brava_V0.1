@@ -14,7 +14,6 @@ import { useAuth } from "@/lib/auth";
 import { fetchPosts, type Post } from "@/lib/comunidad";
 import { PostCard } from "@/components/comunidad/PostCard";
 import { Composer, type ComposerHandle } from "@/components/comunidad/Composer";
-import { HubSheet, HUB_BAR_HEIGHT } from "@/components/HubSheet";
 
 const PAGE_SIZE = 20;
 
@@ -54,11 +53,6 @@ export default function Inicio() {
     load(next);
   }
 
-  function onComunidadPress() {
-    listRef.current?.scrollToOffset({ offset: 0, animated: true });
-    composerRef.current?.focus();
-  }
-
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -72,7 +66,7 @@ export default function Inicio() {
       <FlatList
         ref={listRef}
         style={styles.container}
-        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: HUB_BAR_HEIGHT + 24 }}
+        contentContainerStyle={{ padding: 16, gap: 12 }}
         data={posts}
         keyExtractor={(p) => p.id}
         refreshControl={
@@ -100,7 +94,6 @@ export default function Inicio() {
           />
         )}
       />
-      <HubSheet onComunidadPress={onComunidadPress} />
     </View>
   );
 }
