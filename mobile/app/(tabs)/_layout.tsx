@@ -18,15 +18,15 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Rutas",
-          tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} />,
+          title: "Inicio",
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="foro"
+        name="rutas"
         options={{
-          title: "Foro",
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles" size={size} color={color} />,
+          title: "Rutas",
+          tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

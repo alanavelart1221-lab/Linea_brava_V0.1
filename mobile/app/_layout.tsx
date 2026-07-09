@@ -73,8 +73,10 @@ function RootNav() {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="ruta/[id]" options={{ title: "Ruta" }} />
       <Stack.Screen name="hacer-ruta/[id]" options={{ title: "Hacer ruta" }} />
-      <Stack.Screen name="foro/[id]" options={{ title: "Hilo" }} />
-      <Stack.Screen name="foro/nuevo" options={{ title: "Nuevo hilo" }} />
+      <Stack.Screen name="comunidad/[id]" options={{ title: "Publicación" }} />
+      <Stack.Screen name="eventos" options={{ title: "Eventos" }} />
+      <Stack.Screen name="marketplace" options={{ title: "Marketplace" }} />
+      <Stack.Screen name="talleres" options={{ title: "Talleres 4×4" }} />
       <Stack.Screen name="proveedor/[id]" options={{ title: "Proveedor" }} />
       <Stack.Screen name="mis-actividades" options={{ title: "Mis actividades" }} />
       <Stack.Screen name="mis-rutas" options={{ title: "Mis rutas" }} />

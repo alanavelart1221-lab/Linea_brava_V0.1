@@ -1,64 +1,63 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
+  ActivityIndicator,
   FlatList,
   Pressable,
-  StyleSheet,
-  ActivityIndicator,
   RefreshControl,
-  Image,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
-import { supabase } from "@/lib/supabase";
+import { useFocusEffect, useRouter } from "expo-router";
 import { colors } from "@/lib/theme";
+import { useAuth } from "@/lib/auth";
+import { fetchPosts, type Post } from "@/lib/comunidad";
+import { PostCard } from "@/components/comunidad/PostCard";
+import { Composer, type ComposerHandle } from "@/components/comunidad/Composer";
+import { HubSheet, HUB_BAR_HEIGHT } from "@/components/HubSheet";
 
-type Row = {
-  id: string;
-  name: string;
-  state: string;
-  region: string | null;
-  level: string;
-  distance_km: number | null;
-  calificada: boolean;
-  image: string | null;
-};
+const PAGE_SIZE = 20;
 
-// Color del chip de nivel (espejo de levelMeta de la web).
-const LEVEL_COLOR: Record<string, string> = {
-  Verde: colors.go400,
-  Azul: "#60A5FA",
-  Negro: colors.bone,
-  Pro: colors.trail400,
-};
-
-export default function Rutas() {
+export default function Inicio() {
   const router = useRouter();
-  const [routes, setRoutes] = useState<Row[]>([]);
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
+
+  const listRef = useRef<FlatList<Post>>(null);
+  const composerRef = useRef<ComposerHandle>(null);
+
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("user_routes")
-      .select("id, name, state, region, level, distance_km, calificada, image")
-      .eq("status", "approved")
-      .order("calificada", { ascending: false })
-      .order("created_at", { ascending: false });
-    setRoutes((data as Row[] | null) ?? []);
-    setLoading(false);
-  }, []);
+  const load = useCallback(
+    async (nextLimit = limit) => {
+      const data = await fetchPosts(nextLimit, userId);
+      setPosts(data);
+      setLoading(false);
+      setLoadingMore(false);
+    },
+    [limit, userId]
+  );
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return routes;
-    return routes.filter((r) =>
-      [r.name, r.state, r.region ?? "", r.level].join(" ").toLowerCase().includes(q)
-    );
-  }, [routes, query]);
+  function onVerMas() {
+    const next = limit + PAGE_SIZE;
+    setLimit(next);
+    setLoadingMore(true);
+    load(next);
+  }
+
+  function onComunidadPress() {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    composerRef.current?.focus();
+  }
 
   if (loading) {
     return (
@@ -69,120 +68,65 @@ export default function Rutas() {
   }
 
   return (
-    <FlatList
-      style={styles.container}
-      contentContainerStyle={{ padding: 16, gap: 12 }}
-      data={results}
-      keyExtractor={(r) => r.id}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={load} tintColor={colors.trail500} />}
-      ListHeaderComponent={
-        <TextInput
-          style={styles.search}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Buscar por nombre, estado o nivel…"
-          placeholderTextColor={colors.mute}
-        />
-      }
-      ListEmptyComponent={<Text style={styles.empty}>Aún no hay rutas de comunidad publicadas.</Text>}
-      renderItem={({ item }) => (
-        <Pressable style={styles.card} onPress={() => router.push(`/ruta/${item.id}`)}>
-          <View style={styles.hero}>
-            {item.image ? (
-              <Image source={{ uri: item.image }} style={styles.heroImg} resizeMode="cover" />
-            ) : (
-              <View style={[styles.heroImg, styles.heroFallback]}>
-                <Text style={styles.heroFallbackText}>{item.name}</Text>
-              </View>
-            )}
-            <View style={styles.heroScrim} />
-            <View style={[styles.levelChip, { borderColor: LEVEL_COLOR[item.level] ?? colors.mute }]}>
-              <Text style={[styles.levelChipText, { color: LEVEL_COLOR[item.level] ?? colors.mute }]}>
-                {item.level}
-              </Text>
-            </View>
-            {item.calificada && <Text style={styles.badge}>★ Calificada</Text>}
+    <View style={styles.container}>
+      <FlatList
+        ref={listRef}
+        style={styles.container}
+        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: HUB_BAR_HEIGHT + 24 }}
+        data={posts}
+        keyExtractor={(p) => p.id}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={() => load()} tintColor={colors.trail500} />
+        }
+        ListHeaderComponent={<Composer ref={composerRef} onPosted={() => load()} />}
+        ListEmptyComponent={
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyTitle}>Todavía no hay publicaciones.</Text>
+            <Text style={styles.emptySubtitle}>¡Sé el primero en compartir algo!</Text>
           </View>
-          <View style={styles.cardBody}>
-            <Text style={styles.eyebrow}>
-              {item.region ? `${item.region} · ` : ""}{item.state}
-            </Text>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.meta}>
-              {item.level} · {item.distance_km != null ? `${item.distance_km} km` : "—"}
-            </Text>
-          </View>
-        </Pressable>
-      )}
-    />
+        }
+        ListFooterComponent={
+          posts.length >= limit ? (
+            <Pressable style={styles.verMas} onPress={onVerMas} disabled={loadingMore}>
+              <Text style={styles.verMasText}>{loadingMore ? "Cargando…" : "Ver más"}</Text>
+            </Pressable>
+          ) : null
+        }
+        renderItem={({ item }) => (
+          <PostCard
+            post={item}
+            userId={userId}
+            onPress={() => router.push(`/comunidad/${item.id}`)}
+          />
+        )}
+      />
+      <HubSheet onComunidadPress={onComunidadPress} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.ink950 },
   center: { alignItems: "center", justifyContent: "center" },
-  search: {
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: 48,
+    gap: 6,
+  },
+  emptyTitle: { color: colors.bone, fontSize: 16 },
+  emptySubtitle: { color: colors.mute, fontSize: 13 },
+  verMas: {
+    alignSelf: "center",
+    marginTop: 8,
     borderWidth: 1,
     borderColor: colors.ink600,
-    backgroundColor: colors.ink900,
     borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: colors.bone,
-    marginBottom: 4,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
   },
-  empty: { color: colors.mute, textAlign: "center", marginTop: 40 },
-  card: {
-    borderWidth: 1,
-    borderColor: colors.ink700,
-    backgroundColor: colors.ink900,
-    borderRadius: 16,
-    overflow: "hidden",
+  verMasText: {
+    color: colors.mute,
+    fontSize: 14,
+    fontWeight: "600",
   },
-  hero: { position: "relative", aspectRatio: 16 / 10, backgroundColor: colors.ink800 },
-  heroImg: { width: "100%", height: "100%" },
-  heroFallback: { alignItems: "center", justifyContent: "center", padding: 16 },
-  heroFallbackText: { color: colors.mute, fontSize: 18, fontWeight: "800", textAlign: "center" },
-  heroScrim: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "55%",
-    backgroundColor: "rgba(11,12,14,0.45)",
-  },
-  levelChip: {
-    position: "absolute",
-    left: 12,
-    top: 12,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    backgroundColor: "rgba(11,12,14,0.55)",
-  },
-  levelChipText: { fontSize: 12, fontWeight: "800" },
-  badge: {
-    position: "absolute",
-    right: 12,
-    top: 12,
-    color: colors.trail300,
-    fontSize: 12,
-    fontWeight: "800",
-    backgroundColor: "rgba(11,12,14,0.55)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  cardBody: { padding: 16 },
-  eyebrow: {
-    color: colors.trail400,
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  name: { color: colors.bone, fontSize: 20, fontWeight: "800", marginTop: 4 },
-  meta: { color: colors.mute, fontSize: 13, marginTop: 6 },
 });
