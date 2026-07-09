@@ -68,10 +68,9 @@ export default function Login() {
         <View style={styles.logoRow}>
           <Image
             source={require("../assets/brand/logo.png")}
-            style={{ width: 56, height: 17 }}
+            style={{ width: 72, height: 22 }}
             resizeMode="contain"
           />
-          <Text style={styles.wordmark}>LÍNEA BRAVA</Text>
         </View>
 
         {/* Contenido principal (centrado verticalmente) */}
@@ -133,13 +132,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, paddingHorizontal: 24, paddingVertical: 12 },
 
   // Logo
-  logoRow: { alignItems: "center", marginTop: 24, gap: 6 },
-  wordmark: {
-    color: colors.trail500,
-    fontFamily: "BebasNeue_400Regular",
-    fontSize: 18,
-    letterSpacing: 3,
-  },
+  logoRow: { alignItems: "center", marginTop: 24 },
 
   // Contenido centrado
   center: { flex: 1, justifyContent: "center", gap: 14 },

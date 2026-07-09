@@ -23,6 +23,7 @@ const GRID_ITEMS: HubItem[] = [
   { key: "marketplace", label: "Marketplace", blurb: "Equipo y accesorios", icon: "cart", route: "/marketplace" },
   { key: "talleres", label: "Talleres", blurb: "Servicios 4×4", icon: "construct", route: "/talleres" },
   { key: "perfil", label: "Perfil", blurb: "Tu cuenta", icon: "person-circle", route: "/(tabs)/perfil" },
+  { key: "comunidad", label: "Comunidad", blurb: "Publica y conecta", icon: "chatbubbles", route: "/(tabs)" },
 ];
 
 // Menú a pantalla completa con todos los accesos de la app. Se abre al tocar
@@ -53,15 +54,18 @@ export function HubMenu({ visible, onClose }: Props) {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.grid}>
             {GRID_ITEMS.map((item) => (
-              <Pressable key={item.key} style={styles.card} onPress={() => go(item.route)}>
-                <View style={styles.cardTop}>
-                  <View style={styles.iconChip}>
-                    <Ionicons name={item.icon} size={22} color={colors.trail500} />
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.mute} />
+              <Pressable
+                key={item.key}
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                onPress={() => go(item.route)}
+              >
+                <View style={styles.iconChip}>
+                  <Ionicons name={item.icon} size={30} color={colors.trail500} />
                 </View>
-                <Text style={styles.cardLabel}>{item.label}</Text>
-                <Text style={styles.cardBlurb} numberOfLines={1}>
+                <Text style={styles.cardLabel} numberOfLines={2}>
+                  {item.label}
+                </Text>
+                <Text style={styles.cardBlurb} numberOfLines={2}>
                   {item.blurb}
                 </Text>
               </Pressable>
@@ -69,28 +73,18 @@ export function HubMenu({ visible, onClose }: Props) {
           </View>
 
           {/* Grabar: acción principal, destacada */}
-          <Pressable style={styles.recordCard} onPress={() => go("/(tabs)/grabar")}>
+          <Pressable
+            style={({ pressed }) => [styles.recordCard, pressed && styles.recordCardPressed]}
+            onPress={() => go("/(tabs)/grabar")}
+          >
             <View style={styles.recordIconChip}>
-              <Ionicons name="radio-button-on" size={24} color={colors.ink950} />
+              <Ionicons name="radio-button-on" size={28} color={colors.ink950} />
             </View>
             <View style={styles.recordBody}>
               <Text style={styles.recordLabel}>Grabar ruta</Text>
               <Text style={styles.recordBlurb}>Inicia el registro de tu recorrido</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.ink950} />
-          </Pressable>
-
-          <Pressable style={[styles.card, styles.cardFull]} onPress={() => go("/(tabs)")}>
-            <View style={styles.cardTop}>
-              <View style={styles.iconChip}>
-                <Ionicons name="chatbubbles" size={22} color={colors.trail500} />
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={colors.mute} />
-            </View>
-            <Text style={styles.cardLabel}>Comunidad</Text>
-            <Text style={styles.cardBlurb} numberOfLines={1}>
-              Publica y conecta con la banda
-            </Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -151,50 +145,59 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    width: "47%",
+    width: "31%",
     flexGrow: 1,
+    minHeight: 140,
     backgroundColor: colors.ink900,
-    borderWidth: 1,
-    borderColor: colors.ink700,
-    borderRadius: 16,
-    padding: 16,
-  },
-  cardFull: {
-    width: "100%",
-    marginTop: 12,
-  },
-  cardTop: {
-    flexDirection: "row",
+    borderWidth: 1.5,
+    borderColor: colors.trail500,
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
+  },
+  cardPressed: {
+    backgroundColor: colors.ink800,
+    borderColor: colors.trail400,
+    transform: [{ scale: 0.96 }],
   },
   iconChip: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "rgba(245,130,31,0.10)",
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    backgroundColor: "rgba(245,130,31,0.12)",
     alignItems: "center",
     justifyContent: "center",
   },
   cardLabel: {
-    marginTop: 10,
+    marginTop: 8,
     color: colors.bone,
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    textAlign: "center",
   },
   cardBlurb: {
-    marginTop: 2,
+    marginTop: 3,
     color: colors.mute,
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
+    textAlign: "center",
   },
   recordCard: {
-    marginTop: 12,
+    marginTop: 28,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     backgroundColor: colors.trail500,
     borderRadius: 16,
     padding: 16,
+  },
+  recordCardPressed: {
+    backgroundColor: colors.trail400,
+    transform: [{ scale: 0.98 }],
   },
   recordIconChip: {
     width: 44,
