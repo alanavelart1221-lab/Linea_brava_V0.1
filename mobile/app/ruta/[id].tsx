@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/lib/auth";
+import { useAuth, BYPASS_AUTH } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { MapWebView } from "@/components/MapWebView";
 import { StarRating } from "@/components/StarRating";
@@ -174,7 +174,7 @@ export default function RutaDetalle() {
         <>
           <Pressable
             style={styles.hacerBtn}
-            onPress={() => router.push(session ? `/hacer-ruta/${id}` : "/login")}
+            onPress={() => router.push(session || BYPASS_AUTH ? `/hacer-ruta/${id}` : "/login")}
           >
             <Text style={styles.hacerBtnText}>▶ Hacer ruta</Text>
           </Pressable>

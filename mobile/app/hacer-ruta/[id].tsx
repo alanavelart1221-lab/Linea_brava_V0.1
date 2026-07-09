@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/lib/auth";
+import { useAuth, BYPASS_AUTH } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { NavMapWebView } from "@/components/NavMapWebView";
 import {
@@ -73,7 +73,7 @@ export default function HacerRuta() {
   const endpoints = useMemo(() => routeEndpoints(route?.track ?? null), [route?.track]);
 
   useEffect(() => {
-    if (session === null) router.replace("/login");
+    if (session === null && !BYPASS_AUTH) router.replace("/login");
   }, [session]);
 
   // Carga de la ruta + arranque del watcher de aproximación (o reanudación).

@@ -12,6 +12,11 @@ import { supabase } from "./supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
+// TEMPORAL: en true, la app no redirige a /login (para probar en Expo Go sin
+// sesión). Las acciones que requieren usuario (publicar, grabar, calificar)
+// quedan ocultas o inactivas. Regresar a false antes de generar un build real.
+export const BYPASS_AUTH = true;
+
 type AuthState = {
   session: Session | null;
   loading: boolean;

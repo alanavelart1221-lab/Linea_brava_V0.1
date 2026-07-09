@@ -26,7 +26,8 @@
       "PowerShell(npx tsc --noEmit)",
       "Bash(node -e \"console.log\\(require\\('C:/Users/Usuario/Documents/Linea_Brava2/node_modules/sharp/package.json'\\).version\\)\")",
       "mcp__visualize__read_me",
-      "mcp__visualize__show_widget"
+      "mcp__visualize__show_widget",
+      "PowerShell(head -30)"
     ]
   },
   "enableAllProjectMcpServers": true,

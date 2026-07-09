@@ -4,7 +4,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts, BebasNeue_400Regular } from "@expo-google-fonts/bebas-neue";
-import { AuthProvider, useAuth } from "@/lib/auth";
+import { AuthProvider, useAuth, BYPASS_AUTH } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { syncPendingActivities } from "@/lib/offline";
 import { getActiveRecording } from "@/lib/tracking";
@@ -16,7 +16,7 @@ function RootNav() {
   const resumeChecked = useRef(false);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || BYPASS_AUTH) return;
     const inLogin = segments[0] === "login";
     if (!session && !inLogin) router.replace("/login");
     else if (session && inLogin) router.replace("/");
