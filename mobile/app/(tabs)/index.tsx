@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,8 +7,9 @@ import { colors } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
 import { loadHomeData, type HomeData } from "@/lib/homeData";
 import { getActiveRecording } from "@/lib/tracking";
+import { getDestacado, type Destacado } from "@/lib/destacado";
 import { relativeTime } from "@/lib/relativeTime";
-import TrackPreview from "@/components/TrackPreview";
+import { DestacadoCard, DestacadoCardSkeleton } from "@/components/DestacadoCard";
 
 type GridItem = {
   key: string;
@@ -24,16 +25,9 @@ const GRID_ITEMS: GridItem[] = [
   { key: "rutas", label: "Rutas", fallback: "Descubre y navega", icon: "map", route: "/(tabs)/rutas", color: colors.go400, chipBg: "rgba(52,211,153,0.14)" },
   { key: "eventos", label: "Eventos", fallback: "Próximas salidas", icon: "calendar", route: "/eventos", color: colors.trail400, chipBg: "rgba(247,154,66,0.14)" },
   { key: "marketplace", label: "Marketplace", fallback: "Equipo y accesorios", icon: "cart", route: "/marketplace", color: colors.trail300, chipBg: "rgba(249,178,109,0.14)" },
+  { key: "talleres", label: "Talleres", fallback: "Servicio 4×4 por zona", icon: "construct", route: "/talleres", color: colors.trail500, chipBg: "rgba(245,130,31,0.14)" },
   { key: "comunidad", label: "Comunidad", fallback: "Publica y conecta", icon: "chatbubbles", route: "/(tabs)/comunidad", color: colors.go500, chipBg: "rgba(16,185,129,0.14)" },
 ];
-
-// Color del chip de nivel (espejo de levelMeta de la web / rutas.tsx).
-const LEVEL_COLOR: Record<string, string> = {
-  Verde: colors.go400,
-  Azul: "#60A5FA",
-  Negro: colors.bone,
-  Pro: colors.trail400,
-};
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -98,6 +92,8 @@ export default function Inicio() {
 
   const [data, setData] = useState<HomeData | null>(null);
   const [hasActiveRec, setHasActiveRec] = useState(false);
+  const [destacado, setDestacado] = useState<Destacado | null>(null);
+  const [destacadoLoading, setDestacadoLoading] = useState(true);
 
   const meta = session?.user.user_metadata ?? {};
   const fullName: string = meta.full_name ?? session?.user.email?.split("@")[0] ?? "Explorador";
@@ -108,6 +104,11 @@ export default function Inicio() {
       let alive = true;
       loadHomeData(session?.user.id).then((d) => alive && setData(d));
       getActiveRecording().then((rec) => alive && setHasActiveRec(rec !== null));
+      getDestacado().then((d) => {
+        if (!alive) return;
+        setDestacado(d);
+        setDestacadoLoading(false);
+      });
       return () => {
         alive = false;
       };
@@ -171,6 +172,8 @@ export default function Inicio() {
           : `${data.nextEvent.title} en ${data.nextEvent.daysAway} días`;
       case "marketplace":
         return data.productsCount ? `${data.productsCount} anuncios` : item.fallback;
+      case "talleres":
+        return data.talleresCount ? `${data.talleresCount} talleres` : item.fallback;
       case "comunidad":
         return data.postsToday ? `${data.postsToday} publicaciones hoy` : item.fallback;
       default:
@@ -185,8 +188,6 @@ export default function Inicio() {
       : session
         ? "GPS listo · graba tu primera ruta"
         : "GPS listo";
-
-  const featured = data?.featuredRoute ?? null;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
@@ -263,8 +264,8 @@ export default function Inicio() {
           ))}
         </View>
 
-        {/* Ruta destacada */}
-        {featured && (
+        {/* Destacado: mejor post de comunidad o último video de YouTube. */}
+        {(destacadoLoading || destacado) && (
           <Animated.View
             style={{
               opacity: routeAnim,
@@ -272,45 +273,23 @@ export default function Inicio() {
             }}
           >
             <View style={styles.sectionRow}>
-              <Text style={styles.sectionTitle}>Cerca de ti</Text>
-              <Pressable onPress={() => go("/(tabs)/rutas")} hitSlop={8}>
+              <Text style={styles.sectionTitle}>Destacado</Text>
+              <Pressable onPress={() => go("/(tabs)/comunidad")} hitSlop={8}>
                 <Text style={styles.sectionLink}>Ver todas</Text>
               </Pressable>
             </View>
-            <Pressable
-              style={({ pressed }) => [styles.routeCard, pressed && styles.routeCardPressed]}
-              onPress={() => go(`/ruta/${featured.id}`)}
-            >
-              {featured.track && featured.track.length > 1 && (
-                <View style={styles.routeMap}>
-                  <TrackPreview track={featured.track} />
-                </View>
-              )}
-              <View style={styles.routeBody}>
-                <View style={styles.routeTitleRow}>
-                  <Text style={styles.routeName} numberOfLines={1}>
-                    {featured.name}
-                  </Text>
-                  {featured.level && (
-                    <View style={[styles.levelChip, { borderColor: LEVEL_COLOR[featured.level] ?? colors.mute }]}>
-                      <Text style={[styles.levelChipText, { color: LEVEL_COLOR[featured.level] ?? colors.mute }]}>
-                        {featured.level}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.routeMeta}>
-                  {featured.distance_km != null ? `${featured.distance_km} km` : "—"}
-                  {featured.ratingCount > 0 && (
-                    <Text>
-                      {"  ·  "}
-                      <Ionicons name="star" size={12} color={colors.trail400} /> {featured.ratingAverage} (
-                      {featured.ratingCount} {featured.ratingCount === 1 ? "reseña" : "reseñas"})
-                    </Text>
-                  )}
-                </Text>
-              </View>
-            </Pressable>
+            {destacado ? (
+              <DestacadoCard
+                item={destacado}
+                onPress={() =>
+                  destacado.kind === "post"
+                    ? go(`/comunidad/${destacado.id}`)
+                    : Linking.openURL(destacado.watchUrl).catch(() => {})
+                }
+              />
+            ) : (
+              <DestacadoCardSkeleton />
+            )}
           </Animated.View>
         )}
       </ScrollView>
@@ -416,6 +395,7 @@ const styles = StyleSheet.create({
   },
   cardWrap: {
     width: "47%",
+    maxWidth: "48%",
     flexGrow: 1,
   },
   card: {
@@ -464,47 +444,5 @@ const styles = StyleSheet.create({
     color: colors.trail400,
     fontSize: 13,
     fontWeight: "700",
-  },
-  routeCard: {
-    backgroundColor: colors.ink900,
-    borderWidth: 1,
-    borderColor: colors.ink700,
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  routeCardPressed: {
-    backgroundColor: colors.ink800,
-    transform: [{ scale: 0.98 }],
-  },
-  routeMap: {
-    backgroundColor: colors.ink800,
-    paddingVertical: 8,
-  },
-  routeBody: {
-    padding: 14,
-  },
-  routeTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  routeName: {
-    flex: 1,
-    color: colors.bone,
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  levelChip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  levelChipText: { fontSize: 12, fontWeight: "800" },
-  routeMeta: {
-    marginTop: 6,
-    color: colors.mute,
-    fontSize: 13,
   },
 });

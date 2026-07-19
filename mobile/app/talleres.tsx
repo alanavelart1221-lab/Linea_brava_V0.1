@@ -1,12 +1,14 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -29,6 +31,8 @@ export default function Talleres() {
   const router = useRouter();
   const [talleres, setTalleres] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [zona, setZona] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -48,6 +52,25 @@ export default function Talleres() {
     }, [load])
   );
 
+  const zonas = useMemo(
+    () => [...new Set(talleres.map((t) => t.state).filter((s): s is string => !!s))].sort(),
+    [talleres]
+  );
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return talleres.filter((t) => {
+      if (zona && t.state !== zona) return false;
+      if (!q) return true;
+      return [t.name, t.city ?? "", t.state ?? "", t.description ?? "", ...(t.specialty ?? [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [talleres, query, zona]);
+
+  const hasFilters = query.trim().length > 0 || zona !== null;
+
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -60,13 +83,60 @@ export default function Talleres() {
     <FlatList
       style={styles.container}
       contentContainerStyle={{ padding: 16, gap: 12 }}
-      data={talleres}
+      data={results}
       keyExtractor={(t) => t.id}
       refreshControl={<RefreshControl refreshing={false} onRefresh={load} tintColor={colors.trail500} />}
+      ListHeaderComponent={
+        <View style={styles.header}>
+          <TextInput
+            style={styles.search}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Buscar taller, ciudad o servicio…"
+            placeholderTextColor={colors.mute}
+          />
+          {zonas.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.zonaRow}
+            >
+              <Pressable
+                style={[styles.zonaChip, zona === null && styles.zonaChipActive]}
+                onPress={() => setZona(null)}
+              >
+                <Text style={[styles.zonaChipText, zona === null && styles.zonaChipTextActive]}>
+                  Todas las zonas
+                </Text>
+              </Pressable>
+              {zonas.map((z) => (
+                <Pressable
+                  key={z}
+                  style={[styles.zonaChip, zona === z && styles.zonaChipActive]}
+                  onPress={() => setZona(zona === z ? null : z)}
+                >
+                  <Text style={[styles.zonaChipText, zona === z && styles.zonaChipTextActive]}>
+                    {z}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      }
       ListEmptyComponent={
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>Aún no hay talleres registrados.</Text>
-          <Text style={styles.emptySubtitle}>Pronto encontrarás servicios 4×4 aquí.</Text>
+          {hasFilters ? (
+            <>
+              <Text style={styles.emptyTitle}>Sin resultados para tu búsqueda.</Text>
+              <Text style={styles.emptySubtitle}>Prueba con otra zona o palabra clave.</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.emptyTitle}>Aún no hay talleres registrados.</Text>
+              <Text style={styles.emptySubtitle}>Pronto encontrarás servicios 4×4 aquí.</Text>
+            </>
+          )}
         </View>
       }
       renderItem={({ item }) => (
@@ -119,6 +189,30 @@ export default function Talleres() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.ink950 },
   center: { alignItems: "center", justifyContent: "center" },
+  header: { gap: 10, marginBottom: 4 },
+  search: {
+    borderWidth: 1,
+    borderColor: colors.ink600,
+    backgroundColor: colors.ink900,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: colors.bone,
+  },
+  zonaRow: { gap: 8 },
+  zonaChip: {
+    borderWidth: 1,
+    borderColor: colors.ink600,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  zonaChipActive: {
+    borderColor: colors.trail400,
+    backgroundColor: "rgba(247,154,66,0.12)",
+  },
+  zonaChipText: { color: colors.mute, fontSize: 12, fontWeight: "600" },
+  zonaChipTextActive: { color: colors.trail400 },
   emptyWrap: { alignItems: "center", paddingVertical: 48, gap: 6 },
   emptyTitle: { color: colors.bone, fontSize: 16 },
   emptySubtitle: { color: colors.mute, fontSize: 13 },
