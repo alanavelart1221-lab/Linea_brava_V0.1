@@ -10,6 +10,9 @@ export const colors = {
   trail300: "#F9B26D",
   go500: "#10B981",
   go400: "#34D399",
+  // Verdes profundos para superficies destacadas (hero de Inicio).
+  pine900: "#0A2E23",
+  pine800: "#0E3D2E",
   bone: "#EDE9E3",
   mute: "#9BA1A8",
   red: "#F87171",

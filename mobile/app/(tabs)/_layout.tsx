@@ -1,68 +1,123 @@
-import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Tabs } from "expo-router";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/lib/theme";
-import { HubMenu } from "@/components/HubMenu";
+
+type TabItem = {
+  key: string;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  route: string;
+  /** pathname que marca este tab como activo */
+  match: (path: string) => boolean;
+};
+
+const TAB_ITEMS: TabItem[] = [
+  { key: "inicio", label: "Inicio", icon: "home", route: "/(tabs)", match: (p) => p === "/" },
+  { key: "rutas", label: "Rutas", icon: "map", route: "/(tabs)/rutas", match: (p) => p.startsWith("/rutas") },
+  { key: "grabar", label: "Grabar", icon: "radio-button-on", route: "/(tabs)/grabar", match: (p) => p.startsWith("/grabar") },
+  { key: "tienda", label: "Tienda", icon: "cart", route: "/marketplace", match: (p) => p.startsWith("/marketplace") },
+  { key: "comunidad", label: "Comunidad", icon: "chatbubbles", route: "/(tabs)/comunidad", match: (p) => p.startsWith("/comunidad") },
+];
 
 export default function TabsLayout() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
 
   return (
-    <>
-      <Tabs
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.ink900 },
-          headerTintColor: colors.bone,
-          headerTitleStyle: { color: colors.bone },
-          sceneStyle: { backgroundColor: colors.ink950 },
-        }}
-        // Barra inferior personalizada: un único botón de ancho completo que
-        // abre el menú de accesos a pantalla completa.
-        tabBar={() => (
-          <View style={[styles.bar, { paddingBottom: insets.bottom + 12 }]}>
-            <Pressable style={styles.homeBtn} onPress={() => setMenuOpen(true)}>
-              <Ionicons name="home" size={18} color={colors.ink950} />
-              <Text style={styles.homeBtnText}>Inicio</Text>
-            </Pressable>
-          </View>
-        )}
-      >
-        <Tabs.Screen name="index" options={{ title: "Inicio" }} />
-        {/* Rutas ocultas de la barra: se llega a ellas desde el menú. */}
-        <Tabs.Screen name="rutas" options={{ href: null, title: "Rutas" }} />
-        <Tabs.Screen name="grabar" options={{ href: null, title: "Grabar" }} />
-        <Tabs.Screen name="proveedores" options={{ href: null, title: "Proveedores" }} />
-        <Tabs.Screen name="perfil" options={{ href: null, title: "Perfil" }} />
-      </Tabs>
-      <HubMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
-    </>
+    <Tabs
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.ink900 },
+        headerTintColor: colors.bone,
+        headerTitleStyle: { color: colors.bone },
+        sceneStyle: { backgroundColor: colors.ink950 },
+      }}
+      // Barra inferior personalizada: 5 accesos con Grabar destacado al centro.
+      tabBar={() => (
+        <View style={[styles.bar, { paddingBottom: insets.bottom + 8 }]}>
+          {TAB_ITEMS.map((item) => {
+            const active = item.match(pathname);
+            if (item.key === "grabar") {
+              return (
+                <Pressable
+                  key={item.key}
+                  style={styles.tab}
+                  onPress={() => router.navigate(item.route as never)}
+                >
+                  <View style={[styles.recordBtn, active && styles.recordBtnActive]}>
+                    <Ionicons name={item.icon} size={24} color={colors.ink950} />
+                  </View>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{item.label}</Text>
+                </Pressable>
+              );
+            }
+            return (
+              <Pressable
+                key={item.key}
+                style={styles.tab}
+                onPress={() => router.navigate(item.route as never)}
+              >
+                <Ionicons
+                  name={active ? item.icon : (`${item.icon}-outline` as keyof typeof Ionicons.glyphMap)}
+                  size={22}
+                  color={active ? colors.trail500 : colors.mute}
+                />
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{item.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+    >
+      <Tabs.Screen name="index" options={{ title: "Inicio", headerShown: false }} />
+      {/* Ocultas del sistema de tabs nativo: la barra propia las navega. */}
+      <Tabs.Screen name="comunidad" options={{ href: null, title: "Comunidad" }} />
+      <Tabs.Screen name="rutas" options={{ href: null, title: "Rutas" }} />
+      <Tabs.Screen name="grabar" options={{ href: null, title: "Grabar" }} />
+      <Tabs.Screen name="proveedores" options={{ href: null, title: "Proveedores" }} />
+      <Tabs.Screen name="perfil" options={{ href: null, title: "Perfil" }} />
+    </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
+    flexDirection: "row",
+    alignItems: "flex-end",
     backgroundColor: colors.ink900,
     borderTopWidth: 1,
     borderTopColor: colors.ink700,
-    paddingHorizontal: 12,
-    paddingTop: 12,
+    paddingHorizontal: 8,
+    paddingTop: 10,
   },
-  homeBtn: {
-    flexDirection: "row",
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    gap: 3,
+  },
+  tabLabel: {
+    color: colors.mute,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  tabLabelActive: {
+    color: colors.trail500,
+    fontWeight: "800",
+  },
+  recordBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: colors.trail500,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    alignSelf: "stretch",
-    backgroundColor: colors.trail500,
-    borderRadius: 999,
-    paddingVertical: 14,
+    marginTop: -26,
+    borderWidth: 4,
+    borderColor: colors.ink900,
   },
-  homeBtnText: {
-    color: colors.ink950,
-    fontSize: 16,
-    fontWeight: "800",
+  recordBtnActive: {
+    backgroundColor: colors.trail400,
   },
 });
