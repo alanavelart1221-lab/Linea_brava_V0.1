@@ -22,6 +22,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # MCP config (contiene tokens — nunca subir a git)
 .mcp.json
 .claude/mcp.json
