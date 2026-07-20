@@ -23,6 +23,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "http2.mlstatic.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.shopify.com",
+      },
+      {
+        protocol: "https",
+        hostname: "illume.com.mx",
+      },
     ],
   },
 };

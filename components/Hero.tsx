@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { HeroSlideshow } from "./HeroSlideshow";
 
 const headlineWords = ["ENCUENTRA", "TU", "PRÓXIMA", "AVENTURA."];
 
@@ -40,16 +40,9 @@ export function Hero({ routeCount, stateCount }: { routeCount: number; stateCoun
       className="grain relative flex min-h-[100svh] flex-col justify-end overflow-hidden pb-14 pt-28 sm:pb-20"
     >
 
-      {/* Hero photo (parallax) */}
+      {/* Hero photos (parallax + crossfade) */}
       <motion.div style={{ y: bgY }} className="absolute inset-0 -z-10 scale-110">
-        <Image
-          src="https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&w=1920&q=85"
-          alt="Jeep Wrangler negro en off-road"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+        <HeroSlideshow />
       </motion.div>
 
       {/* Grade so the headline stays readable over the lines */}
