@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts, BebasNeue_400Regular } from "@expo-google-fonts/bebas-neue";
 import { AuthProvider, useAuth, BYPASS_AUTH } from "@/lib/auth";
+import { CartProvider } from "@/lib/cart-context";
 import { colors } from "@/lib/theme";
 import { syncPendingActivities } from "@/lib/offline";
 import { getActiveRecording } from "@/lib/tracking";
@@ -76,6 +77,10 @@ function RootNav() {
       <Stack.Screen name="comunidad/[id]" options={{ title: "Publicación" }} />
       <Stack.Screen name="eventos" options={{ title: "Eventos" }} />
       <Stack.Screen name="marketplace" options={{ title: "Marketplace" }} />
+      <Stack.Screen name="producto/[id]" options={{ title: "Producto" }} />
+      <Stack.Screen name="carrito" options={{ title: "Carrito" }} />
+      <Stack.Screen name="checkout" options={{ title: "Checkout" }} />
+      <Stack.Screen name="pedido-exito" options={{ title: "", headerBackVisible: false }} />
       <Stack.Screen name="talleres" options={{ title: "Talleres 4×4" }} />
       <Stack.Screen name="proveedor/[id]" options={{ title: "Proveedor" }} />
       <Stack.Screen name="mis-actividades" options={{ title: "Mis actividades" }} />
@@ -99,8 +104,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="light" />
-        <RootNav />
+        <CartProvider>
+          <StatusBar style="light" />
+          <RootNav />
+        </CartProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

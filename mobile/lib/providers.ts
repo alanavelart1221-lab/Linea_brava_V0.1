@@ -32,6 +32,14 @@ export interface ProviderProduct {
   image_url: string | null;
 }
 
+// Producto con datos del proveedor, usado en la pantalla de detalle.
+export interface ProductDetail extends ProviderProduct {
+  category: string | null;
+  stock: number | null;
+  provider_id: string;
+  provider_name: string;
+}
+
 export async function fetchProviders(): Promise<Provider[]> {
   const { data } = await supabase
     .from("providers")
@@ -61,5 +69,37 @@ export async function fetchProvider(id: string): Promise<{
   return {
     provider: (provider as Provider | null) ?? null,
     products: (products as ProviderProduct[] | null) ?? [],
+  };
+}
+
+export async function fetchProduct(id: string): Promise<ProductDetail | null> {
+  const { data } = await supabase
+    .from("provider_products")
+    .select(
+      "id, name, description, price, currency, image_url, category, stock, provider_id, providers!inner(name)"
+    )
+    .eq("id", id)
+    .eq("active", true)
+    .single();
+
+  if (!data) return null;
+
+  type Raw = Omit<ProductDetail, "provider_name"> & {
+    providers: { name: string } | { name: string }[] | null;
+  };
+  const row = data as unknown as Raw;
+  const prov = Array.isArray(row.providers) ? row.providers[0] : row.providers;
+
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    price: row.price,
+    currency: row.currency,
+    image_url: row.image_url,
+    category: row.category,
+    stock: row.stock,
+    provider_id: row.provider_id,
+    provider_name: prov?.name ?? "Proveedor",
   };
 }

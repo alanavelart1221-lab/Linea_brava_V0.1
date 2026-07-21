@@ -8,12 +8,15 @@ import {
   ActivityIndicator,
   Linking,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/lib/theme";
 import { fetchProvider, TYPE_LABEL, type Provider, type ProviderProduct } from "@/lib/providers";
+import AddToCartButton from "@/components/AddToCartButton";
 
 export default function ProveedorDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [products, setProducts] = useState<ProviderProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,13 +83,29 @@ export default function ProveedorDetalle() {
       ) : (
         products.map((p) => (
           <View key={p.id} style={styles.product}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.pName}>{p.name}</Text>
-              {p.description ? <Text style={styles.pDesc}>{p.description}</Text> : null}
+            <Pressable style={styles.productMain} onPress={() => router.push(`/producto/${p.id}`)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.pName}>{p.name}</Text>
+                {p.description ? (
+                  <Text style={styles.pDesc} numberOfLines={2}>{p.description}</Text>
+                ) : null}
+              </View>
+              {p.price != null && (
+                <Text style={styles.price}>${p.price.toLocaleString("es-MX")} {p.currency}</Text>
+              )}
+              <Ionicons name="chevron-forward" size={18} color={colors.mute} />
+            </Pressable>
+            <View style={styles.productActions}>
+              <AddToCartButton
+                variant="compact"
+                productId={p.id}
+                providerId={provider.id}
+                providerName={provider.name}
+                name={p.name}
+                price={p.price}
+                imageUrl={p.image_url}
+              />
             </View>
-            {p.price != null && (
-              <Text style={styles.price}>${p.price.toLocaleString("es-MX")} {p.currency}</Text>
-            )}
           </View>
         ))
       )}
@@ -110,7 +129,9 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.ink700 },
   section: { color: colors.bone, fontSize: 18, fontWeight: "800" },
   mute: { color: colors.mute },
-  product: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: colors.ink700, backgroundColor: colors.ink900, borderRadius: 14, padding: 14 },
+  product: { borderWidth: 1, borderColor: colors.ink700, backgroundColor: colors.ink900, borderRadius: 14, padding: 14, gap: 12 },
+  productMain: { flexDirection: "row", alignItems: "center", gap: 12 },
+  productActions: { alignItems: "flex-start" },
   pName: { color: colors.bone, fontSize: 15, fontWeight: "600" },
   pDesc: { color: colors.mute, fontSize: 13, marginTop: 2 },
   price: { color: colors.trail500, fontWeight: "800" },
