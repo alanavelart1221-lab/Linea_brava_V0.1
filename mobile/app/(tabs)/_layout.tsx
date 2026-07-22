@@ -3,6 +3,7 @@ import { Tabs, usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/lib/theme";
+import HeaderBackHome from "@/components/HeaderBackHome";
 
 type TabItem = {
   key: string;
@@ -33,6 +34,9 @@ export default function TabsLayout() {
         headerTintColor: colors.bone,
         headerTitleStyle: { color: colors.bone },
         sceneStyle: { backgroundColor: colors.ink950 },
+        // Las pestañas no se apilan, así que no traen retroceso propio: se les
+        // pone una flecha explícita hacia Inicio (index no tiene header).
+        headerLeft: () => <HeaderBackHome />,
       }}
       // Barra inferior personalizada: 5 accesos con Grabar destacado al centro.
       tabBar={() => (

@@ -95,7 +95,6 @@ export default function Rutas() {
                 <Text style={styles.heroFallbackText}>{item.name}</Text>
               </View>
             )}
-            <View style={styles.heroScrim} />
             <View style={[styles.levelChip, { borderColor: LEVEL_COLOR[item.level] ?? colors.mute }]}>
               <Text style={[styles.levelChipText, { color: LEVEL_COLOR[item.level] ?? colors.mute }]}>
                 {item.level}
@@ -143,14 +142,6 @@ const styles = StyleSheet.create({
   heroImg: { width: "100%", height: "100%" },
   heroFallback: { alignItems: "center", justifyContent: "center", padding: 16 },
   heroFallbackText: { color: colors.mute, fontSize: 18, fontWeight: "800", textAlign: "center" },
-  heroScrim: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "55%",
-    backgroundColor: "rgba(11,12,14,0.45)",
-  },
   levelChip: {
     position: "absolute",
     left: 12,

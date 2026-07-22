@@ -6,6 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts, BebasNeue_400Regular } from "@expo-google-fonts/bebas-neue";
 import { AuthProvider, useAuth, BYPASS_AUTH } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart-context";
+import HeaderBackHome from "@/components/HeaderBackHome";
 import { colors } from "@/lib/theme";
 import { syncPendingActivities } from "@/lib/offline";
 import { getActiveRecording } from "@/lib/tracking";
@@ -70,7 +71,9 @@ function RootNav() {
         contentStyle: { backgroundColor: colors.ink950 },
       }}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      {/* El title alimenta la etiqueta del botón atrás de las pantallas que se
+          apilan encima; sin él se leería "(tabs)". */}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Inicio" }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="ruta/[id]" options={{ title: "Ruta" }} />
       <Stack.Screen name="hacer-ruta/[id]" options={{ title: "Hacer ruta" }} />
@@ -80,12 +83,17 @@ function RootNav() {
       <Stack.Screen name="producto/[id]" options={{ title: "Producto" }} />
       <Stack.Screen name="carrito" options={{ title: "Carrito" }} />
       <Stack.Screen name="checkout" options={{ title: "Checkout" }} />
-      <Stack.Screen name="pedido-exito" options={{ title: "", headerBackVisible: false }} />
+      {/* Sin retroceso al checkout: la única salida es Inicio. */}
+      <Stack.Screen
+        name="pedido-exito"
+        options={{ title: "", headerBackVisible: false, headerLeft: () => <HeaderBackHome /> }}
+      />
       <Stack.Screen name="talleres" options={{ title: "Talleres 4×4" }} />
       <Stack.Screen name="proveedor/[id]" options={{ title: "Proveedor" }} />
       <Stack.Screen name="mis-actividades" options={{ title: "Mis actividades" }} />
       <Stack.Screen name="mis-rutas" options={{ title: "Mis rutas" }} />
       <Stack.Screen name="descargadas" options={{ title: "Rutas descargadas" }} />
+      <Stack.Screen name="crear-contrasena" options={{ title: "Contraseña de acceso" }} />
     </Stack>
   );
 }

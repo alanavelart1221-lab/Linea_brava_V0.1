@@ -34,6 +34,11 @@ export default function Perfil() {
         <Text style={styles.chev}>›</Text>
       </Pressable>
 
+      <Pressable style={styles.row} onPress={() => router.push("/crear-contrasena")}>
+        <Text style={styles.rowText}>Contraseña de acceso</Text>
+        <Text style={styles.chev}>›</Text>
+      </Pressable>
+
       <Pressable style={styles.signout} onPress={signOut}>
         <Text style={styles.signoutText}>Salir</Text>
       </Pressable>

@@ -4,9 +4,12 @@ import {
   Text,
   Image,
   Pressable,
+  TextInput,
   StyleSheet,
   Alert,
   Linking,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,8 +28,10 @@ const LEGAL = {
 };
 
 export default function Login() {
-  const { signInWithGoogle, signInWithApple } = useAuth();
-  const [busy, setBusy] = useState<null | "google" | "apple">(null);
+  const { signInWithPassword, signInWithGoogle, signInWithApple } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState<null | "email" | "google" | "apple">(null);
 
   // Reproduce el video en bucle, en silencio y en automático.
   const player = useVideoPlayer(BG_VIDEO, (p) => {
@@ -34,6 +39,22 @@ export default function Login() {
     p.muted = true;
     p.play();
   });
+
+  async function handleSubmit() {
+    const e = email.trim();
+    if (!e.includes("@") || !e.includes(".")) {
+      Alert.alert("Correo inválido", "Escribe un correo válido.");
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert("Contraseña muy corta", "Usa al menos 6 caracteres.");
+      return;
+    }
+    setBusy("email");
+    const error = await signInWithPassword(e, password);
+    setBusy(null);
+    if (error) Alert.alert("No se pudo entrar", error);
+  }
 
   async function handleGoogle() {
     setBusy("google");
@@ -64,63 +85,110 @@ export default function Login() {
       <View style={styles.overlay} pointerEvents="none" />
 
       <SafeAreaView style={styles.safe}>
-        {/* Logo discreto */}
-        <View style={styles.logoRow}>
-          <Image
-            source={require("../assets/brand/logo.png")}
-            style={{ width: 72, height: 22 }}
-            resizeMode="contain"
-          />
-        </View>
+        {/* El video y el overlay quedan fuera para que el teclado no los mueva. */}
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          {/* Logo discreto */}
+          <View style={styles.logoRow}>
+            <Image
+              source={require("../assets/brand/logo.png")}
+              style={{ width: 72, height: 22 }}
+              resizeMode="contain"
+            />
+          </View>
 
-        {/* Contenido principal (centrado verticalmente) */}
-        <View style={styles.center}>
-          <Text style={styles.tagline}>
-            La aventura <Text style={styles.taglineAccent}>off-road</Text> empieza
-            aquí.
-          </Text>
-
-          <Pressable
-            style={[styles.btnSocial, busy === "google" && styles.btnDisabled]}
-            onPress={handleGoogle}
-            disabled={busy !== null}
-          >
-            <Ionicons name="logo-google" size={20} color={colors.ink950} />
-            <Text style={styles.btnSocialText}>
-              {busy === "google" ? "Abriendo…" : "Continuar con Google"}
+          {/* Contenido principal (centrado verticalmente) */}
+          <View style={styles.center}>
+            <Text style={styles.tagline}>
+              La aventura <Text style={styles.taglineAccent}>off-road</Text> empieza
+              aquí.
             </Text>
-          </Pressable>
 
-          <Pressable
-            style={[styles.btnSocial, busy === "apple" && styles.btnDisabled]}
-            onPress={handleApple}
-            disabled={busy !== null}
-          >
-            <Ionicons name="logo-apple" size={20} color={colors.ink950} />
-            <Text style={styles.btnSocialText}>
-              {busy === "apple" ? "Abriendo…" : "Continuar con Apple"}
+            {/* Correo + contraseña: el único método que funciona en Expo Go. */}
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="tucorreo@ejemplo.com"
+              placeholderTextColor={colors.mute}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              editable={busy === null}
+            />
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              placeholderTextColor={colors.mute}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={busy === null}
+            />
+
+            <Pressable
+              style={[styles.btnPrimary, busy === "email" && styles.btnDisabled]}
+              onPress={handleSubmit}
+              disabled={busy !== null}
+            >
+              <Text style={styles.btnPrimaryText}>
+                {busy === "email" ? "Entrando…" : "Entrar"}
+              </Text>
+            </Pressable>
+
+            <View style={styles.separator}>
+              <View style={styles.separatorLine} />
+              <Text style={styles.separatorText}>o</Text>
+              <View style={styles.separatorLine} />
+            </View>
+
+            <Pressable
+              style={[styles.btnSocial, busy === "google" && styles.btnDisabled]}
+              onPress={handleGoogle}
+              disabled={busy !== null}
+            >
+              <Ionicons name="logo-google" size={20} color={colors.ink950} />
+              <Text style={styles.btnSocialText}>
+                {busy === "google" ? "Abriendo…" : "Continuar con Google"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.btnSocial, busy === "apple" && styles.btnDisabled]}
+              onPress={handleApple}
+              disabled={busy !== null}
+            >
+              <Ionicons name="logo-apple" size={20} color={colors.ink950} />
+              <Text style={styles.btnSocialText}>
+                {busy === "apple" ? "Abriendo…" : "Continuar con Apple"}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Enlaces legales (abajo) */}
+          <Text style={styles.legal}>
+            Al continuar aceptas los{" "}
+            <Text
+              style={styles.legalLink}
+              onPress={() => Linking.openURL(LEGAL.terminos)}
+            >
+              Términos
+            </Text>{" "}
+            y la{" "}
+            <Text
+              style={styles.legalLink}
+              onPress={() => Linking.openURL(LEGAL.privacidad)}
+            >
+              Privacidad
             </Text>
-          </Pressable>
-        </View>
-
-        {/* Enlaces legales (abajo) */}
-        <Text style={styles.legal}>
-          Al continuar aceptas los{" "}
-          <Text
-            style={styles.legalLink}
-            onPress={() => Linking.openURL(LEGAL.terminos)}
-          >
-            Términos
-          </Text>{" "}
-          y la{" "}
-          <Text
-            style={styles.legalLink}
-            onPress={() => Linking.openURL(LEGAL.privacidad)}
-          >
-            Privacidad
+            .
           </Text>
-          .
-        </Text>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
@@ -130,24 +198,50 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ink950 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
   safe: { flex: 1, paddingHorizontal: 24, paddingVertical: 12 },
+  flex: { flex: 1 },
 
   // Logo
   logoRow: { alignItems: "center", marginTop: 24 },
 
   // Contenido centrado
-  center: { flex: 1, justifyContent: "center", gap: 14 },
+  center: { flex: 1, justifyContent: "center", gap: 12 },
   tagline: {
     color: colors.bone,
     fontSize: 26,
     fontWeight: "800",
     lineHeight: 32,
-    marginBottom: 10,
+    marginBottom: 6,
     // Sombra sutil para reforzar la legibilidad sobre el video.
     textShadowColor: "rgba(0,0,0,0.45)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
   taglineAccent: { color: colors.trail500 },
+
+  // Campos "glass": translúcidos para no tapar el video y seguir legibles.
+  input: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: colors.bone,
+    fontSize: 16,
+  },
+
+  btnPrimary: {
+    backgroundColor: colors.trail500,
+    paddingVertical: 16,
+    borderRadius: 999,
+    alignItems: "center",
+    marginTop: 2,
+  },
+  btnPrimaryText: { color: colors.ink950, fontSize: 16, fontWeight: "800" },
+
+  separator: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 2 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.2)" },
+  separatorText: { color: colors.bone, fontSize: 13 },
 
   btnSocial: {
     flexDirection: "row",
